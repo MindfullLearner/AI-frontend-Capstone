@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ThinkLens — structured decision-making setup form">
+  <title>ThinkLens | Decision Setup</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo" aria-label="ThinkLens home">
+        <span class="logo-icon" aria-hidden="true">◈</span>
+        ThinkLens
+      </a>
+      <p class="tagline">Clarity before commitment</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="page-intro">
+      <h1>Decision Setup</h1>
+      <p>
+        Define your decision clearly before analysis. The more context you provide,
+        the sharper your ThinkLens results will be.
+      </p>
+    </section>
+
+    <form id="decision-form" class="decision-form" novalidate>
+      <!-- Core decision details -->
+      <fieldset class="form-section">
+        <legend>Decision Details</legend>
+
+        <div class="form-group">
+          <label for="decision-title">Decision Title <span class="required">*</span></label>
+          <input
+            type="text"
+            id="decision-title"
+            name="title"
+            placeholder="e.g. Choose a tech stack for the MVP"
+            required
+            maxlength="120"
+            autocomplete="off"
+          >
+          <span class="field-hint">A short, specific name for the decision.</span>
+          <span class="field-error" id="title-error" role="alert"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="decision-context">Context &amp; Background <span class="required">*</span></label>
+          <textarea
+            id="decision-context"
+            name="context"
+            rows="4"
+            placeholder="What situation led to this decision? What problem are you trying to solve?"
+            required
+            maxlength="1000"
+          ></textarea>
+          <span class="field-hint">Explain why this decision matters now.</span>
+          <span class="field-error" id="context-error" role="alert"></span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="decision-deadline">Decision Deadline</label>
+            <input type="date" id="decision-deadline" name="deadline">
+            <span class="field-hint">Optional — when must this be decided?</span>
+          </div>
+
+          <div class="form-group">
+            <label for="decision-priority">Urgency</label>
+            <select id="decision-priority" name="priority">
+              <option value="low">Low — can wait</option>
+              <option value="medium" selected>Medium — decide soon</option>
+              <option value="high">High — time-sensitive</option>
+              <option value="critical">Critical — immediate</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Options / alternatives -->
+      <fieldset class="form-section">
+        <legend>Options Under Consideration</legend>
+        <p class="section-description">
+          List every realistic alternative. You need at least two options to compare.
+        </p>
+
+        <div id="options-list" class="dynamic-list" aria-live="polite"></div>
+
+        <button type="button" id="add-option-btn" class="btn btn-secondary btn-sm">
+          + Add Option
+        </button>
+        <span class="field-error" id="options-error" role="alert"></span>
+      </fieldset>
+
+      <!-- Evaluation criteria -->
+      <fieldset class="form-section">
+        <legend>Evaluation Criteria</legend>
+        <p class="section-description">
+          What factors matter when comparing options? Assign a weight from 1 (low) to 5 (high).
+        </p>
+
+        <div id="criteria-list" class="dynamic-list" aria-live="polite"></div>
+
+        <button type="button" id="add-criterion-btn" class="btn btn-secondary btn-sm">
+          + Add Criterion
+        </button>
+        <span class="field-error" id="criteria-error" role="alert"></span>
+      </fieldset>
+
+      <!-- Constraints & stakeholders -->
+      <fieldset class="form-section">
+        <legend>Constraints &amp; Stakeholders</legend>
+
+        <div class="form-group">
+          <label for="decision-constraints">Constraints</label>
+          <textarea
+            id="decision-constraints"
+            name="constraints"
+            rows="3"
+            placeholder="Budget limits, technical requirements, legal rules, team capacity…"
+            maxlength="500"
+          ></textarea>
+          <span class="field-hint">Anything that limits your choices.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="decision-stakeholders">Stakeholders</label>
+          <input
+            type="text"
+            id="decision-stakeholders"
+            name="stakeholders"
+            placeholder="e.g. Product team, end users, engineering lead"
+            maxlength="200"
+          >
+          <span class="field-hint">Who is affected by or involved in this decision?</span>
+        </div>
+      </fieldset>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" id="save-draft-btn" class="btn btn-ghost">Save Draft</button>
+        <button type="submit" class="btn btn-primary">Start Analysis →</button>
+      </div>
+    </form>
+
+    <!-- Success panel (hidden until submit) -->
+    <section id="success-panel" class="success-panel" hidden aria-live="polite">
+      <div class="success-icon" aria-hidden="true">✓</div>
+      <h2>Decision Configured</h2>
+      <p>Your decision setup is ready. Review the summary below.</p>
+      <pre id="decision-summary" class="decision-summary"></pre>
+      <div class="form-actions">
+        <button type="button" id="edit-decision-btn" class="btn btn-secondary">Edit Setup</button>
+        <button type="button" id="new-decision-btn" class="btn btn-primary">New Decision</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>ThinkLens — FlyRank AI Frontend Engineering Capstone</p>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="js/decision-setup.js"></script>
+</body>
+</html>
