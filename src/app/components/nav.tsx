@@ -18,19 +18,22 @@ const NAV_LINKS = [
  */
 export function Nav() {
   return (
-    <header className="border-b border-gray-200">
+    <header className="border-b border-border bg-surface">
       <nav
         aria-label="Main navigation"
-        className="mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-4"
+        className="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-5 sm:px-8"
       >
-        <Link href="/" className="text-sm font-semibold tracking-tight text-gray-900">
+        <Link
+          href="/"
+          className="text-base font-semibold tracking-tight text-foreground"
+        >
           ThinkLens
         </Link>
 
-        <ul className="flex items-center gap-6 text-sm text-gray-600">
+        <ul className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium">
           {NAV_LINKS.map((link) => (
             <li key={link.href}>
-              <Link href={link.href} className="hover:text-gray-900">
+              <Link href={link.href} className="text-muted hover:text-accent">
                 {link.label}
               </Link>
             </li>
