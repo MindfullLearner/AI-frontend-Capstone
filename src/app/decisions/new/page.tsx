@@ -1,4 +1,5 @@
 import { DecisionOptions } from "../../components/decision-options";
+import { DecisionCriteria } from "../../components/decision-criteria";
 
 /**
  * /decisions/new — Create Decision (Decision Setup UI)
@@ -7,12 +8,12 @@ import { DecisionOptions } from "../../components/decision-options";
  * controls are native and uncontrolled (no value/onChange, no React state),
  * so the page ships as static markup with minimal client-side JavaScript.
  *
- * The "Options Under Consideration" section is the one interactive piece
- * so far — it's rendered via <DecisionOptions />, a small Client Component
- * that owns its own state. Everything else, including "Add Criterion",
- * "Cancel", and "Continue", remains inert `type="button"` controls that
- * only establish the intended layout. Nothing here saves, validates, or
- * submits data yet.
+ * "Options Under Consideration" and "Evaluation Criteria" are the
+ * interactive pieces so far — rendered via <DecisionOptions /> and
+ * <DecisionCriteria />, each a small, independent Client Component that
+ * owns its own state. Everything else, including "Cancel" and "Continue",
+ * remains inert `type="button"` controls that only establish the intended
+ * layout. Nothing here saves, validates, or submits data yet.
  */
 export default function NewDecisionPage() {
   return (
@@ -78,107 +79,8 @@ export default function NewDecisionPage() {
         {/* 3. Options Under Consideration — interactive Client Component */}
         <DecisionOptions />
 
-        {/* 4. Evaluation Criteria */}
-        <section
-          aria-labelledby="criteria-heading"
-          className="flex flex-col gap-5 rounded-lg border border-border bg-surface p-6"
-        >
-          <div className="flex flex-col gap-2">
-            <h2
-              id="criteria-heading"
-              className="text-lg font-semibold text-foreground"
-            >
-              Evaluation Criteria
-            </h2>
-            <p className="text-sm text-muted">
-              Criteria will be used to evaluate and compare your options
-              later. Give each one a name and how much it matters.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-3 rounded-md border border-border p-4 sm:flex-row sm:items-end sm:gap-4">
-              <div className="flex flex-1 flex-col gap-2">
-                <label
-                  htmlFor="criterion-1-name"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Criterion name
-                </label>
-                <input
-                  id="criterion-1-name"
-                  name="criterion-1-name"
-                  type="text"
-                  placeholder="e.g. Cost"
-                  className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:w-40">
-                <label
-                  htmlFor="criterion-1-weight"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Importance
-                </label>
-                <select
-                  id="criterion-1-weight"
-                  name="criterion-1-weight"
-                  defaultValue="medium"
-                  className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="critical">Critical</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 rounded-md border border-border p-4 sm:flex-row sm:items-end sm:gap-4">
-              <div className="flex flex-1 flex-col gap-2">
-                <label
-                  htmlFor="criterion-2-name"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Criterion name
-                </label>
-                <input
-                  id="criterion-2-name"
-                  name="criterion-2-name"
-                  type="text"
-                  placeholder="e.g. Commute time"
-                  className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:w-40">
-                <label
-                  htmlFor="criterion-2-weight"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Importance
-                </label>
-                <select
-                  id="criterion-2-weight"
-                  name="criterion-2-weight"
-                  defaultValue="medium"
-                  className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="critical">Critical</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="w-fit rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:border-accent hover:text-accent"
-          >
-            + Add Criterion
-          </button>
-        </section>
+        {/* 4. Evaluation Criteria — interactive Client Component */}
+        <DecisionCriteria />
 
         {/* 5. Constraints & Stakeholders */}
         <section
