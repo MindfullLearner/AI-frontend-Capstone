@@ -1,5 +1,6 @@
 import { DecisionOptions } from "../../components/decision-options";
 import { DecisionCriteria } from "../../components/decision-criteria";
+import { DecisionContext } from "../../components/decision-context";
 
 /**
  * /decisions/new — Create Decision (Decision Setup UI)
@@ -8,9 +9,10 @@ import { DecisionCriteria } from "../../components/decision-criteria";
  * controls are native and uncontrolled (no value/onChange, no React state),
  * so the page ships as static markup with minimal client-side JavaScript.
  *
- * "Options Under Consideration" and "Evaluation Criteria" are the
- * interactive pieces so far — rendered via <DecisionOptions /> and
- * <DecisionCriteria />, each a small, independent Client Component that
+ * "Options Under Consideration", "Evaluation Criteria", and
+ * "Constraints & Stakeholders" are the interactive pieces so far —
+ * rendered via <DecisionOptions />, <DecisionCriteria />, and
+ * <DecisionContext />, each a small, independent Client Component that
  * owns its own state. Everything else, including "Cancel" and "Continue",
  * remains inert `type="button"` controls that only establish the intended
  * layout. Nothing here saves, validates, or submits data yet.
@@ -82,50 +84,8 @@ export default function NewDecisionPage() {
         {/* 4. Evaluation Criteria — interactive Client Component */}
         <DecisionCriteria />
 
-        {/* 5. Constraints & Stakeholders */}
-        <section
-          aria-labelledby="constraints-stakeholders-heading"
-          className="flex flex-col gap-5 rounded-lg border border-border bg-surface p-6"
-        >
-          <h2
-            id="constraints-stakeholders-heading"
-            className="text-lg font-semibold text-foreground"
-          >
-            Constraints &amp; Stakeholders
-          </h2>
-
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="constraints"
-              className="text-sm font-medium text-foreground"
-            >
-              Constraints
-            </label>
-            <textarea
-              id="constraints"
-              name="constraints"
-              rows={3}
-              placeholder="Describe any limitations or requirements, such as budget, timing, or policy."
-              className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="stakeholders"
-              className="text-sm font-medium text-foreground"
-            >
-              Stakeholders
-            </label>
-            <textarea
-              id="stakeholders"
-              name="stakeholders"
-              rows={3}
-              placeholder="Who is affected by this decision, or who should be consulted?"
-              className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-            />
-          </div>
-        </section>
+        {/* 5. Constraints & Stakeholders — interactive Client Component */}
+        <DecisionContext />
 
         {/* 6. Bottom action area */}
         <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
