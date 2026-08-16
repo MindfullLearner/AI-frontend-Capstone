@@ -1,95 +1,62 @@
 "use client";
 
-import { useId, useState } from "react";
-
-type Criterion = {
+export type Criterion = {
   id: string;
   name: string;
   importance: string;
 };
 
-const DEFAULT_IMPORTANCE = "medium";
+export const DEFAULT_IMPORTANCE = "medium";
 
 let criterionCounter = 0;
 
 /**
  * Generates a stable, browser-safe id for a new criterion without pulling
- * in a UUID dependency. Combines a render-scoped prefix (from useId) with
- * an incrementing counter so ids stay unique even across many additions —
- * the same strategy already used by DecisionOptions.
+ * in a UUID dependency. Combines a render-scoped prefix (supplied by the
+ * caller, typically from useId()) with an incrementing counter so ids
+ * stay unique even across many additions — the same strategy used by
+ * DecisionOptions. Exported so DecisionSetupForm can use the same
+ * id-generation strategy when initializing state and adding criteria,
+ * while the logic itself still lives here.
  */
-function createCriterionId(prefix: string) {
+export function createCriterionId(prefix: string) {
   criterionCounter += 1;
   return `${prefix}-criterion-${criterionCounter}`;
 }
 
-function createInitialCriteria(prefix: string): Criterion[] {
+export function createInitialCriteria(prefix: string): Criterion[] {
   return [
     { id: createCriterionId(prefix), name: "", importance: DEFAULT_IMPORTANCE },
     { id: createCriterionId(prefix), name: "", importance: DEFAULT_IMPORTANCE },
   ];
 }
 
+type DecisionCriteriaProps = {
+  criteria: Criterion[];
+  onNameChange: (id: string, name: string) => void;
+  onImportanceChange: (id: string, importance: string) => void;
+  onAdd: () => void;
+  onRemove: (id: string) => void;
+};
+
 /**
- * Interactive "Evaluation Criteria" section. Lets the user add and remove
- * criteria, each with its own name and importance (the same Low / Medium /
- * High / Critical choices the existing dropdown already used). This is a
- * separate, self-contained Client Component so the "use client" boundary
- * stays scoped to just this section — it does not touch, import, or
- * depend on DecisionOptions in any way.
+ * Interactive "Evaluation Criteria" section. Renders the criteria list and
+ * calls the parent's callbacks on add/remove/edit — it no longer owns the
+ * criteria array itself. State now lives in DecisionSetupForm, the parent
+ * Client Component, so a future Continue handler can access it alongside
+ * the rest of the Decision Setup form.
  *
- * Minimum-criteria decision: the Options section's static copy explicitly
- * said "a decision needs at least two options to compare," and that
- * milestone's spec explicitly mandated a floor of two. The Evaluation
- * Criteria copy carries no equivalent statement — it only ever showed two
- * rows as an example. Since no minimum is stated here and validation is
- * explicitly out of scope this milestone, no floor is enforced: a
- * criterion can be removed down to zero. This doesn't break the page
- * (the list simply renders empty, and "+ Add Criterion" is still there to
- * add more), and nothing downstream depends on criteria existing yet.
- *
- * Values are held in local component state only. Nothing here saves,
- * validates, or submits data yet.
+ * Minimum-criteria behavior is unchanged from the previous milestone: no
+ * floor is enforced, matching the original decision that this section
+ * (unlike Options) never stated a minimum requirement.
  */
-export function DecisionCriteria() {
-  const idPrefix = useId();
-  const [criteria, setCriteria] = useState<Criterion[]>(() =>
-    createInitialCriteria(idPrefix)
-  );
-
-  function handleNameChange(id: string, name: string) {
-    setCriteria((current) =>
-      current.map((criterion) =>
-        criterion.id === id ? { ...criterion, name } : criterion
-      )
-    );
-  }
-
-  function handleImportanceChange(id: string, importance: string) {
-    setCriteria((current) =>
-      current.map((criterion) =>
-        criterion.id === id ? { ...criterion, importance } : criterion
-      )
-    );
-  }
-
-  function handleAdd() {
-    setCriteria((current) => [
-      ...current,
-      {
-        id: createCriterionId(idPrefix),
-        name: "",
-        importance: DEFAULT_IMPORTANCE,
-      },
-    ]);
-  }
-
-  function handleRemove(id: string) {
-    setCriteria((current) =>
-      current.filter((criterion) => criterion.id !== id)
-    );
-  }
-
+export function DecisionCriteria({
+  criteria,
+  onNameChange,
+  onImportanceChange,
+  onAdd,
+  onRemove,
+}: DecisionCriteriaProps) {
   return (
     <section
       aria-labelledby="criteria-heading"
@@ -132,7 +99,7 @@ export function DecisionCriteria() {
                   type="text"
                   value={criterion.name}
                   onChange={(event) =>
-                    handleNameChange(criterion.id, event.target.value)
+                    onNameChange(criterion.id, event.target.value)
                   }
                   placeholder="e.g. Cost"
                   className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
@@ -151,7 +118,7 @@ export function DecisionCriteria() {
                   name={importanceId}
                   value={criterion.importance}
                   onChange={(event) =>
-                    handleImportanceChange(criterion.id, event.target.value)
+                    onImportanceChange(criterion.id, event.target.value)
                   }
                   className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
                 >
@@ -164,7 +131,7 @@ export function DecisionCriteria() {
 
               <button
                 type="button"
-                onClick={() => handleRemove(criterion.id)}
+                onClick={() => onRemove(criterion.id)}
                 aria-label={`Remove Criterion ${criterionNumber}`}
                 className="w-fit self-start text-sm font-medium text-muted hover:text-accent sm:self-end sm:pb-2"
               >
@@ -177,7 +144,7 @@ export function DecisionCriteria() {
 
       <button
         type="button"
-        onClick={handleAdd}
+        onClick={onAdd}
         className="w-fit rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:border-accent hover:text-accent"
       >
         + Add Criterion

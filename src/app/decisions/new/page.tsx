@@ -1,20 +1,15 @@
-import { DecisionDetails } from "../../components/decision-details";
-import { DecisionOptions } from "../../components/decision-options";
-import { DecisionCriteria } from "../../components/decision-criteria";
-import { DecisionContext } from "../../components/decision-context";
+import { DecisionSetupForm } from "../../components/decision-setup-form";
 
 /**
  * /decisions/new — Create Decision (Decision Setup UI)
  *
  * Server Component: this page has no state or interactivity of its own —
- * it only assembles Client Component sections. "Decision Details",
- * "Options Under Consideration", "Evaluation Criteria", and
- * "Constraints & Stakeholders" are each rendered via <DecisionDetails />,
- * <DecisionOptions />, <DecisionCriteria />, and <DecisionContext />, every
- * one a small, independent Client Component that owns its own state.
- * Everything else, including "Cancel" and "Continue", remains inert
- * `type="button"` controls that only establish the intended layout.
- * Nothing here saves, validates, or submits data yet.
+ * it renders the static page header and the interactive Decision Setup
+ * form. All decision state (title, context, deadline, urgency, options,
+ * criteria, constraints, stakeholders) now lives in a single Client
+ * Component boundary, <DecisionSetupForm />, so a future Continue handler
+ * can access the complete form state in one place. Nothing here saves,
+ * validates, or submits data yet.
  */
 export default function NewDecisionPage() {
   return (
@@ -31,42 +26,7 @@ export default function NewDecisionPage() {
         </p>
       </header>
 
-      <form className="mt-10 flex flex-col gap-10">
-        {/* 2. Decision Details — interactive Client Component */}
-        <DecisionDetails />
-
-        {/* 3. Options Under Consideration — interactive Client Component */}
-        <DecisionOptions />
-
-        {/* 4. Evaluation Criteria — interactive Client Component */}
-        <DecisionCriteria />
-
-        {/* 5. Constraints & Stakeholders — interactive Client Component */}
-        <DecisionContext />
-
-        {/* 6. Bottom action area */}
-        <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted">
-            This form does not save or analyze your decision yet — that
-            arrives in a later milestone.
-          </p>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-accent"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover"
-            >
-              Continue
-            </button>
-          </div>
-        </div>
-      </form>
+      <DecisionSetupForm />
     </div>
   );
 }

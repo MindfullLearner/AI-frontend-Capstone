@@ -1,71 +1,59 @@
 "use client";
 
-import { useId, useState } from "react";
-
-type Option = {
+export type Option = {
   id: string;
   value: string;
 };
 
-const MIN_OPTIONS = 2;
+export const MIN_OPTIONS = 2;
 
 let optionCounter = 0;
 
 /**
  * Generates a stable, browser-safe id for a new option without pulling in
- * a UUID dependency. Combines a render-scoped prefix (from useId) with an
- * incrementing counter so ids stay unique even across many additions.
+ * a UUID dependency. Combines a render-scoped prefix (supplied by the
+ * caller, typically from useId()) with an incrementing counter so ids
+ * stay unique even across many additions. Exported so DecisionSetupForm
+ * can use the same id-generation strategy when initializing state and
+ * adding options, while the logic itself still lives here.
  */
-function createOptionId(prefix: string) {
+export function createOptionId(prefix: string) {
   optionCounter += 1;
   return `${prefix}-option-${optionCounter}`;
 }
 
-function createInitialOptions(prefix: string): Option[] {
+export function createInitialOptions(prefix: string): Option[] {
   return [
     { id: createOptionId(prefix), value: "" },
     { id: createOptionId(prefix), value: "" },
   ];
 }
 
+type DecisionOptionsProps = {
+  options: Option[];
+  onChange: (id: string, value: string) => void;
+  onAdd: () => void;
+  onRemove: (id: string) => void;
+};
+
 /**
- * Interactive "Options Under Consideration" section. Lets the user add and
- * remove options, with a minimum of two always enforced. This is the only
- * interactive piece of the Decision Setup page in this milestone — the
- * "use client" boundary is scoped to just this component so the rest of
- * /decisions/new can stay a Server Component.
+ * Interactive "Options Under Consideration" section. Renders the options
+ * list and calls the parent's callbacks on add/remove/edit — it no longer
+ * owns the options array itself. State now lives in DecisionSetupForm, the
+ * parent Client Component, so a future Continue handler can access it
+ * alongside the rest of the Decision Setup form.
  *
- * Values are held in local component state only. Nothing here saves,
- * validates, or submits data yet.
+ * The minimum-two-options behavior is unchanged: the Remove button is
+ * disabled once only MIN_OPTIONS remain, and the parent's onRemove
+ * handler enforces the same floor when actually updating state.
  */
-export function DecisionOptions() {
-  const idPrefix = useId();
-  const [options, setOptions] = useState<Option[]>(() =>
-    createInitialOptions(idPrefix)
-  );
-
+export function DecisionOptions({
+  options,
+  onChange,
+  onAdd,
+  onRemove,
+}: DecisionOptionsProps) {
   const canRemove = options.length > MIN_OPTIONS;
-
-  function handleChange(id: string, value: string) {
-    setOptions((current) =>
-      current.map((option) => (option.id === id ? { ...option, value } : option))
-    );
-  }
-
-  function handleAdd() {
-    setOptions((current) => [
-      ...current,
-      { id: createOptionId(idPrefix), value: "" },
-    ]);
-  }
-
-  function handleRemove(id: string) {
-    setOptions((current) =>
-      current.length > MIN_OPTIONS
-        ? current.filter((option) => option.id !== id)
-        : current
-    );
-  }
 
   return (
     <section
@@ -102,7 +90,7 @@ export function DecisionOptions() {
 
                 <button
                   type="button"
-                  onClick={() => handleRemove(option.id)}
+                  onClick={() => onRemove(option.id)}
                   disabled={!canRemove}
                   aria-label={`Remove Option ${optionNumber}`}
                   className="text-sm font-medium text-muted hover:text-accent disabled:cursor-not-allowed disabled:text-muted/40 disabled:hover:text-muted/40"
@@ -116,7 +104,7 @@ export function DecisionOptions() {
                 name={inputId}
                 type="text"
                 value={option.value}
-                onChange={(event) => handleChange(option.id, event.target.value)}
+                onChange={(event) => onChange(option.id, event.target.value)}
                 placeholder={
                   optionNumber === 1
                     ? "e.g. Stay in current apartment"
@@ -133,7 +121,7 @@ export function DecisionOptions() {
 
       <button
         type="button"
-        onClick={handleAdd}
+        onClick={onAdd}
         className="w-fit rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:border-accent hover:text-accent"
       >
         + Add Option

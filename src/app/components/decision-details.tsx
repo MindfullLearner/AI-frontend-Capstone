@@ -1,33 +1,34 @@
 "use client";
 
-import { useState } from "react";
+type DecisionDetailsProps = {
+  title: string;
+  context: string;
+  deadline: string;
+  urgency: string;
+  onTitleChange: (value: string) => void;
+  onContextChange: (value: string) => void;
+  onDeadlineChange: (value: string) => void;
+  onUrgencyChange: (value: string) => void;
+};
 
 /**
- * Interactive "Decision Details" section. Makes title, context, deadline,
- * and urgency controlled inputs, each backed by its own piece of state, so
- * changing one never affects the others. This is a separate,
- * self-contained Client Component so the "use client" boundary stays
- * scoped to just this section — it does not touch, import, or depend on
- * DecisionOptions, DecisionCriteria, or DecisionContext.
- *
- * "Decision title" and "Context / background" preserve the exact heading,
- * labels, placeholders, input types, and classes already established for
- * this section. "Deadline" and "Urgency" did not previously exist as
- * fields in this Next.js page — they're added here per this milestone's
- * spec, modeled on the deadline/urgency field from the round-1-vague
- * branch (the closest existing reference, and its default matches this
- * milestone's state shape), restyled to match this app's existing
- * input/select classes and single-column layout.
- *
- * Values are held in local component state only. Nothing here saves,
- * validates, or submits data yet.
+ * Interactive "Decision Details" section. Renders title, context,
+ * deadline, and urgency as controlled inputs and calls the parent's
+ * callbacks on change — it no longer owns those state slices itself.
+ * State now lives in DecisionSetupForm, the parent Client Component, so a
+ * future Continue handler can access it alongside the rest of the
+ * Decision Setup form.
  */
-export function DecisionDetails() {
-  const [title, setTitle] = useState("");
-  const [context, setContext] = useState("");
-  const [deadline, setDeadline] = useState("");
-  const [urgency, setUrgency] = useState("medium");
-
+export function DecisionDetails({
+  title,
+  context,
+  deadline,
+  urgency,
+  onTitleChange,
+  onContextChange,
+  onDeadlineChange,
+  onUrgencyChange,
+}: DecisionDetailsProps) {
   return (
     <section
       aria-labelledby="decision-details-heading"
@@ -52,7 +53,7 @@ export function DecisionDetails() {
           name="decision-title"
           type="text"
           value={title}
-          onChange={(event) => setTitle(event.target.value)}
+          onChange={(event) => onTitleChange(event.target.value)}
           placeholder="e.g. Choosing a new apartment"
           className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
         />
@@ -70,7 +71,7 @@ export function DecisionDetails() {
           name="decision-context"
           rows={4}
           value={context}
-          onChange={(event) => setContext(event.target.value)}
+          onChange={(event) => onContextChange(event.target.value)}
           placeholder="Describe the situation, why this decision matters, and any relevant background."
           className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
         />
@@ -88,7 +89,7 @@ export function DecisionDetails() {
           name="decision-deadline"
           type="date"
           value={deadline}
-          onChange={(event) => setDeadline(event.target.value)}
+          onChange={(event) => onDeadlineChange(event.target.value)}
           className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
         />
       </div>
@@ -104,7 +105,7 @@ export function DecisionDetails() {
           id="decision-urgency"
           name="decision-urgency"
           value={urgency}
-          onChange={(event) => setUrgency(event.target.value)}
+          onChange={(event) => onUrgencyChange(event.target.value)}
           className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
         >
           <option value="low">Low — can wait</option>

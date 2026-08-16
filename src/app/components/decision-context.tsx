@@ -1,22 +1,26 @@
 "use client";
 
-import { useState } from "react";
+type DecisionContextProps = {
+  constraints: string;
+  stakeholders: string;
+  onConstraintsChange: (value: string) => void;
+  onStakeholdersChange: (value: string) => void;
+};
 
 /**
- * Interactive "Constraints & Stakeholders" section. Makes the two
- * textareas controlled inputs, each backed by its own piece of state, so
- * typing in one never affects the other. This is a separate,
- * self-contained Client Component so the "use client" boundary stays
- * scoped to just this section — it does not touch, import, or depend on
- * DecisionOptions or DecisionCriteria.
- *
- * Values are held in local component state only. Nothing here saves,
- * validates, or submits data yet.
+ * Interactive "Constraints & Stakeholders" section. Renders the two
+ * textareas as controlled inputs and calls the parent's callbacks on
+ * change — it no longer owns constraints/stakeholders state itself. State
+ * now lives in DecisionSetupForm, the parent Client Component, so a
+ * future Continue handler can access it alongside the rest of the
+ * Decision Setup form.
  */
-export function DecisionContext() {
-  const [constraints, setConstraints] = useState("");
-  const [stakeholders, setStakeholders] = useState("");
-
+export function DecisionContext({
+  constraints,
+  stakeholders,
+  onConstraintsChange,
+  onStakeholdersChange,
+}: DecisionContextProps) {
   return (
     <section
       aria-labelledby="constraints-stakeholders-heading"
@@ -41,7 +45,7 @@ export function DecisionContext() {
           name="constraints"
           rows={3}
           value={constraints}
-          onChange={(event) => setConstraints(event.target.value)}
+          onChange={(event) => onConstraintsChange(event.target.value)}
           placeholder="Describe any limitations or requirements, such as budget, timing, or policy."
           className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
         />
@@ -59,7 +63,7 @@ export function DecisionContext() {
           name="stakeholders"
           rows={3}
           value={stakeholders}
-          onChange={(event) => setStakeholders(event.target.value)}
+          onChange={(event) => onStakeholdersChange(event.target.value)}
           placeholder="Who is affected by this decision, or who should be consulted?"
           className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
         />
