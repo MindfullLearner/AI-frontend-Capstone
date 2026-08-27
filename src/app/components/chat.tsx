@@ -9,25 +9,37 @@ import { DefaultChatTransport } from "ai";
  * streaming endpoint via useChat, and renders the conversation as it
  * streams in.
  *
- * This is intentionally minimal: no stop button, no "thinking" indicator,
- * no auto-scroll, no markdown rendering, no persistence. Those are later
- * milestones. The goal here is just to prove the client can talk to the
- * existing streaming endpoint and render multi-turn conversation state
- * correctly.
+ * This is intentionally minimal: no auto-scroll, no markdown rendering, no
+ * persistence. Those are later milestones. It does include a "Thinking..."
+ * indicator and a Stop button, driven entirely by useChat's own `status`
+ * and `stop()` — no invented timers or extra state.
  */
 export function Chat() {
   // useChat in this version of the SDK does not manage the text input for
   // you (no `input` / `handleInputChange`), so the component owns it.
   const [input, setInput] = useState("");
 
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, stop } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
   });
 
-  const isBusy = status === "submitted" || status === "streaming";
+  // status is the SDK's own source of truth for the request lifecycle:
+  // "submitted" (sent, no tokens yet), "streaming" (tokens arriving),
+  // "ready" (idle/finished/stopped), "error" (failed). We derive our UI
+  // states from it directly instead of tracking anything separately.
+  const isSubmitted = status === "submitted";
+  const isStreaming = status === "streaming";
+  const isBusy = isSubmitted || isStreaming;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    // The input stays enabled while busy (so it doesn't get "stuck"), but
+    // the visible action is Stop, not Send — so pressing Enter shouldn't
+    // start a second overlapping request.
+    if (isBusy) {
+      return;
+    }
 
     const trimmed = input.trim();
     if (trimmed.length === 0) {
@@ -77,6 +89,21 @@ export function Chat() {
             );
           })
         )}
+
+        {/* "submitted" means the request has been sent but the assistant
+            hasn't produced a first token yet — the SDK doesn't even add an
+            assistant message to `messages` until then, so this indicator
+            is a separate bubble, not something that could overlap with
+            the real streamed message. Once the first chunk arrives,
+            status flips to "streaming" and the real message takes over. */}
+        {isSubmitted ? (
+          <div className="max-w-[80%] self-start rounded-md border border-border bg-background px-3 py-2 text-sm text-muted">
+            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted">
+              ThinkLens
+            </p>
+            Thinking...
+          </div>
+        ) : null}
       </div>
 
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
@@ -91,13 +118,23 @@ export function Chat() {
           placeholder="Ask ThinkLens about your decision..."
           className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
         />
-        <button
-          type="submit"
-          disabled={isBusy || input.trim().length === 0}
-          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Send
-        </button>
+        {isBusy ? (
+          <button
+            type="button"
+            onClick={() => stop()}
+            className="rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-accent"
+          >
+            Stop
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={input.trim().length === 0}
+            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Send
+          </button>
+        )}
       </form>
     </div>
   );
