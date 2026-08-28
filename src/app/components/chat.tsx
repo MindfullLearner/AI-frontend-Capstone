@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import { MarkdownMessage } from "./markdown-message";
 
 // How close to the bottom (in pixels) still counts as "at the bottom".
 // A small threshold avoids auto-follow flickering on/off from tiny,
@@ -20,11 +21,12 @@ const NEAR_BOTTOM_THRESHOLD_PX = 64;
  * streaming endpoint via useChat, and renders the conversation as it
  * streams in.
  *
- * This is intentionally minimal: no markdown rendering, no persistence,
- * no regenerate button. Those are later milestones. It does include a
- * "Thinking..." indicator, a Stop button, and streaming-aware auto-scroll
- * — all driven by useChat's own `status`/`stop()` plus the message
- * container's real scroll position, no invented timers.
+ * Assistant text is rendered as Markdown via <MarkdownMessage />; user
+ * text always stays plain. No persistence, no regenerate button — those
+ * are later milestones. It does include a "Thinking..." indicator, a Stop
+ * button, and streaming-aware auto-scroll — all driven by useChat's own
+ * `status`/`stop()` plus the message container's real scroll position, no
+ * invented timers.
  */
 export function Chat() {
   // useChat in this version of the SDK does not manage the text input for
@@ -137,11 +139,15 @@ export function Chat() {
                   {/* Messages are made of parts, not a single content string.
                       A message can have multiple parts (e.g. reasoning, tool
                       calls); for this basic milestone we only render the
-                      text parts. Each text part's `text` string grows in
-                      place as the response streams in. */}
+                      text parts. User text always stays plain text — only
+                      the assistant's text is ever parsed as Markdown. */}
                   {message.parts.map((part, index) =>
                     part.type === "text" ? (
-                      <span key={index}>{part.text}</span>
+                      isUser ? (
+                        <span key={index}>{part.text}</span>
+                      ) : (
+                        <MarkdownMessage key={index} text={part.text} />
+                      )
                     ) : null
                   )}
                 </div>
