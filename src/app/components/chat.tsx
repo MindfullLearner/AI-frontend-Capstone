@@ -113,7 +113,7 @@ export function Chat() {
         <div
           ref={messageListRef}
           onScroll={handleMessageListScroll}
-          className="flex h-[60vh] flex-col gap-3 overflow-y-auto rounded-lg border border-border bg-surface p-4"
+          className="flex h-[50dvh] flex-col gap-3 overflow-y-auto overflow-x-hidden rounded-lg border border-border bg-surface p-4 sm:h-[60dvh]"
         >
           {messages.length === 0 ? (
             <p className="text-sm text-muted">
@@ -128,8 +128,8 @@ export function Chat() {
                   key={message.id}
                   className={
                     isUser
-                      ? "max-w-[80%] self-end rounded-md bg-accent px-3 py-2 text-sm text-white"
-                      : "max-w-[80%] self-start rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                      ? "max-w-[80%] min-w-0 self-end break-words rounded-md bg-accent px-3 py-2 text-sm text-white"
+                      : "max-w-[80%] min-w-0 self-start break-words rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                   }
                 >
                   <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted">
@@ -162,7 +162,7 @@ export function Chat() {
               the real streamed message. Once the first chunk arrives,
               status flips to "streaming" and the real message takes over. */}
           {isSubmitted ? (
-            <div className="max-w-[80%] self-start rounded-md border border-border bg-background px-3 py-2 text-sm text-muted">
+            <div className="max-w-[80%] min-w-0 self-start break-words rounded-md border border-border bg-background px-3 py-2 text-sm text-muted">
               <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted">
                 ThinkLens
               </p>
