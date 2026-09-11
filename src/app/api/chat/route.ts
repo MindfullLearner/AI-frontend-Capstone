@@ -1,5 +1,8 @@
 import { streamText, convertToModelMessages } from "ai";
+
 import { model, systemPrompt } from "@/lib/ai/config";
+
+import { analyzeDecision } from "@/lib/ai/tools/analyze-decision";
 
 export async function POST(req: Request) {
   const { messages } = await req.json();
@@ -10,8 +13,8 @@ export async function POST(req: Request) {
     model,
     system: systemPrompt,
     messages: modelMessages,
-    onError({ error }) {
-      console.error("Gemini streaming error:", error);
+    tools: {
+      analyzeDecision,
     },
   });
 

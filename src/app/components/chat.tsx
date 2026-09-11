@@ -10,6 +10,10 @@ import {
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { MarkdownMessage } from "./markdown-message";
+import {
+  DecisionAnalysisResult,
+  type DecisionAnalysisResultData,
+} from "./decision-analysis-result";
 
 // How close to the bottom (in pixels) still counts as "at the bottom".
 // A small threshold avoids auto-follow flickering on/off from tiny,
@@ -141,15 +145,64 @@ export function Chat() {
                       calls); for this basic milestone we only render the
                       text parts. User text always stays plain text — only
                       the assistant's text is ever parsed as Markdown. */}
-                  {message.parts.map((part, index) =>
-                    part.type === "text" ? (
-                      isUser ? (
+                  {message.parts.map((part, index) => {
+                    if (part.type === "text") {
+                      return isUser ? (
                         <span key={index}>{part.text}</span>
                       ) : (
                         <MarkdownMessage key={index} text={part.text} />
-                      )
-                    ) : null
-                  )}
+                      );
+                    }
+
+                    if (part.type === "tool-analyzeDecision") {
+                     
+                      if (part.state === "input-streaming") {
+                        return (
+                          <div
+                            key={index}
+                            className="mt-3 rounded-md border border-border bg-background p-3 text-sm text-muted"
+                          >
+                            Preparing decision analysis...
+                          </div>
+                        );
+                      }
+
+                      if (part.state === "input-available") {
+                        return (
+                          <div
+                            key={index}
+                            className="mt-3 rounded-md border border-border bg-background p-3 text-sm text-muted"
+                          >
+                            Analyzing your decision...
+                          </div>
+                        );
+                      }
+
+                      if (part.state === "output-error") {
+                        return (
+                          <div
+                            key={index}
+                            className="mt-3 rounded-md border border-red-500/30 bg-background p-3 text-sm text-red-500"
+                          >
+                            Decision analysis failed: {part.errorText}
+                          </div>
+                        );
+                      }
+
+                      if (part.state === "output-available") {
+                        return (
+                          <div key={index} className="mt-3">
+                            
+                            <DecisionAnalysisResult
+                              result={part.output as DecisionAnalysisResultData}
+                            />
+                          </div>
+                        );
+                      }
+                    }
+
+                    return null;
+                  })}
                 </div>
               );
             })

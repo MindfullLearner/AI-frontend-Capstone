@@ -179,6 +179,7 @@ export const analyzeDecision = tool({
     "Calculates a deterministic, weighted 0-100 score for each option in a decision, based on user-supplied criteria weights (1-5) and per-option scores (0-10). Performs plain arithmetic only - it does not use a language model or invent any scores.",
   inputSchema: analyzeDecisionInputSchema,
   execute: (input): AnalyzeDecisionOutput => {
+    
     const { decision, criteria, options } = input;
 
     const totalWeight = criteria.reduce(
