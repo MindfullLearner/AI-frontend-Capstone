@@ -1,34 +1,76 @@
-# Frontend AI Engineering Capstone
+# ThinkLens — Generative UI & Tool Calling
 
-This repository contains my capstone project and weekly assignments for the **FlyRank AI Frontend Engineering Internship**.
+## 📌 Assignment Overview
 
-It documents my learning journey throughout the internship, including project development, AI-assisted coding practices, and frontend engineering tasks.
+This assignment adds a **generative UI and tool-calling workflow** to ThinkLens, an AI decision and reasoning companion.
 
-## Project Status
+The goal was to move beyond a basic streaming chatbot by allowing the AI to call a **server-side decision analysis tool**, process structured decision data, and display the tool's result as a dedicated interactive UI component.
 
-🚧 In Progress – Week 1 of the FlyRank AI Frontend Engineering Internship.
+The implementation uses the **Vercel AI SDK**, Google Gemini, Zod schemas, and React components.
 
-## Tech Stack
+---
 
-- HTML5
-- CSS3
-- JavaScript (ES6+)
-- Node.js
-- Git & GitHub
-- Cursor AI (AI Assistant)
+## 🎯 Assignment Objectives
 
-## Goals
+This implementation covers the following requirements:
 
-- Learn professional frontend development workflows.
-- Use AI tools effectively during software development.
-- Follow Git best practices and Conventional Commits.
-- Build a complete frontend AI project.
+- Add at least one server-side AI tool.
+- Define the tool using a typed Zod schema.
+- Execute the tool on the server.
+- Handle different tool-call lifecycle states.
+- Render tool states as dedicated UI instead of raw JSON.
+- Display the tool result using a real React component.
+- Handle failed tool execution with a designed error state.
+- Allow the AI to continue its response after receiving the tool result.
+- Deploy and test the complete workflow.
 
-## Repository Structure
+---
 
-The repository is organized incrementally as internship tasks and projects are completed. Folder layout and setup instructions will be added as development progresses.
+## 🧠 Feature: Decision Analysis Tool
 
-## Author
+ThinkLens includes a server-side `analyzeDecision` tool.
 
-**Nayab Maryam**  
-Software Engineering Student
+The AI can use this tool when a user's decision contains structured information such as:
+
+- Decision
+- Options
+- Criteria
+- Criterion weights
+- Scores for each option
+- Constraints and considerations
+
+The tool validates the input, calculates weighted scores, and returns structured analysis.
+
+### Tool Output
+
+The tool produces:
+
+- Overall decision summary
+- Score for each option
+- Reasoning for each option
+- Key considerations
+- Potential risks
+
+The calculation is performed deterministically by the server-side tool rather than being generated as arbitrary text by the model.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Next.js**
+- **React**
+- **TypeScript**
+- **Vercel AI SDK**
+- **Google Gemini**
+- **Zod**
+- **Tailwind CSS**
+- **React Markdown**
+
+---
+
+## 📂 Important Files
+
+### AI Configuration
+
+```text
+src/lib/ai/config.ts
