@@ -4,6 +4,7 @@ const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/decisions", label: "Decisions" },
   { href: "/decisions/new", label: "Create Decision" },
+  { href: "/chat", label: "Chat" },
   { href: "/health", label: "Health" },
 ] as const;
 
