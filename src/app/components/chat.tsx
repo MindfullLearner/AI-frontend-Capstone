@@ -37,7 +37,7 @@ export function Chat() {
   // you (no `input` / `handleInputChange`), so the component owns it.
   const [input, setInput] = useState("");
 
-  const { messages, sendMessage, status, stop } = useChat({
+  const { messages, sendMessage, status, stop, error, regenerate } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
   });
 
@@ -48,6 +48,7 @@ export function Chat() {
   const isSubmitted = status === "submitted";
   const isStreaming = status === "streaming";
   const isBusy = isSubmitted || isStreaming;
+  const isError = status === "error";
 
   // Whether the message list is currently scrolled to (or near) the
   // bottom. This is the single source of truth for auto-scroll: we never
@@ -89,7 +90,7 @@ export function Chat() {
       return;
     }
     container.scrollTop = container.scrollHeight;
-  }, [messages, isSubmitted, isNearBottom]);
+  }, [messages, isSubmitted, isError, isNearBottom]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -220,6 +221,26 @@ export function Chat() {
                 ThinkLens
               </p>
               Thinking...
+            </div>
+          ) : null}
+
+          {isError ? (
+            <div className="max-w-[80%] min-w-0 self-start break-words rounded-md border border-red-500/30 bg-background px-3 py-2 text-sm text-red-500">
+              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-red-500">
+                ThinkLens
+              </p>
+              <p>
+                Something went wrong and the response failed.
+                {error?.message ? ` (${error.message})` : null}
+              </p>
+              <button
+                type="button"
+                onClick={() => regenerate()}
+                disabled={isBusy}
+                className="mt-2 rounded-md border border-red-500/30 bg-background px-3 py-1 text-xs font-medium text-red-500 hover:border-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Retry
+              </button>
             </div>
           ) : null}
         </div>
