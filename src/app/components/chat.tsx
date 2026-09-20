@@ -20,6 +20,15 @@ import {
 // insignificant scroll differences.
 const NEAR_BOTTOM_THRESHOLD_PX = 64;
 
+// Shown as clickable starting points in the empty state, before any
+// messages exist. Picking one only fills the input (see onClick below) —
+// it never sends automatically, so the user can still edit it first.
+const EXAMPLE_PROMPTS = [
+  "Help me decide between two job offers",
+  "What information am I missing before making this decision?",
+  "Compare learning React vs. Python first",
+] as const;
+
 /**
  * Basic ThinkLens chat component. Connects to the existing POST /api/chat
  * streaming endpoint via useChat, and renders the conversation as it
@@ -121,9 +130,26 @@ export function Chat() {
           className="flex h-[50dvh] flex-col gap-3 overflow-y-auto overflow-x-hidden rounded-lg border border-border bg-surface p-4 sm:h-[60dvh]"
         >
           {messages.length === 0 ? (
-            <p className="text-sm text-muted">
-              No messages yet. Say hello to ThinkLens.
-            </p>
+            <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+              <p className="max-w-prose text-sm text-muted">
+                ThinkLens helps you think through a decision — comparing
+                options, weighing trade-offs, and spotting what you might be
+                missing. Try an example, or type your own question below.
+              </p>
+
+              <div className="flex w-full flex-col gap-2">
+                {EXAMPLE_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => setInput(prompt)}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-left text-sm font-medium text-foreground hover:border-accent hover:text-accent"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : (
             messages.map((message) => {
               const isUser = message.role === "user";
