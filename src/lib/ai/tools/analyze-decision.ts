@@ -52,7 +52,7 @@ const optionSchema = z.object({
     .describe("One score for every declared criterion."),
 });
 
-const analyzeDecisionInputSchema = z
+export const analyzeDecisionInputSchema = z
   .object({
     decision: z
       .string()
