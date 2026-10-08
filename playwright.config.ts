@@ -10,13 +10,16 @@ export default defineConfig({
 
   projects: [
     {
-      name: "Microsoft Edge",
-      use: {
-        ...devices["Desktop Edge"],
-        channel: "msedge",
-      },
+      name: process.env.CI ? "Chromium" : "Microsoft Edge",
+      use: process.env.CI
+        ? { ...devices["Desktop Chrome"] }
+        : {
+            ...devices["Desktop Edge"],
+            channel: "msedge",
+          },
     },
   ],
+  
 
   webServer: {
     command: "npm run dev",
