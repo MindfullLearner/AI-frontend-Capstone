@@ -1,379 +1,320 @@
-# ThinkLens — Generative UI & Tool Calling
+# ThinkLens — Generative UI, Tool Calling & Testing
 
-## 📌 Assignment Overview
+## 📌 Project Overview
 
-This assignment adds a **generative UI and tool-calling workflow** to ThinkLens, an AI decision and reasoning companion.
+**ThinkLens** is an AI-powered decision and reasoning companion designed to help users structure decisions, analyze options, and understand the reasoning behind their choices.
 
-The goal was to move beyond a basic streaming chatbot by allowing the AI to call a **server-side decision analysis tool**, process structured decision data, and display the tool's result as a dedicated UI component.
+This project includes a generative UI and tool-calling workflow powered by the Vercel AI SDK and Google Gemini. It also includes automated component tests, AI-tool validation tests, an end-to-end (E2E) test, and a GitHub Actions CI workflow.
 
-The implementation uses the **Vercel AI SDK**, Google Gemini, Zod schemas, and React components.
+The goal is to build a reliable AI-powered interface while applying software testing and continuous integration practices.
 
----
+## 🎯 Project Objectives
 
-## 🎯 Assignment Objectives
-
-This implementation covers the following requirements:
-
-- Add at least one server-side AI tool.
-- Define the tool using a typed Zod schema.
-- Execute the tool on the server.
-- Handle different tool-call lifecycle states.
-- Render tool states as dedicated UI instead of raw JSON.
-- Display the tool result using a real React component.
-- Handle failed tool execution with a designed error state.
-- Allow the AI to continue its response after receiving the tool result.
-- Deploy and test the complete workflow.
-
----
+* Integrate an AI assistant into a React-based application.
+* Execute server-side decision analysis through an AI tool.
+* Validate structured inputs using Zod.
+* Render tool results as dedicated React components.
+* Handle streaming, loading, success, and error states.
+* Test components and validation logic with automated tests.
+* Verify the primary chat workflow using Playwright.
+* Run automated tests through GitHub Actions on pushes and pull requests.
 
 ## 🧠 Feature: Decision Analysis Tool
 
-ThinkLens includes a server-side `analyzeDecision` tool.
+ThinkLens includes a server-side `analyzeDecision` tool that processes structured decision information, including:
 
-The AI can use this tool when a user's decision contains structured information such as:
+* Decision details
+* Available options
+* Evaluation criteria and weights
+* Scores for each option
+* Constraints and considerations
 
-- Decision
-- Options
-- Criteria
-- Criterion weights
-- Scores for each option
-- Constraints and considerations
-
-The tool validates the input, calculates weighted scores, and returns structured analysis.
+The tool validates its input, calculates weighted scores, and returns structured analysis.
 
 ### Tool Output
 
-The tool produces:
+The structured result can include:
 
-- Overall decision summary
-- Score for each option
-- Reasoning for each option
-- Key considerations
-- Potential risks
+* An overall decision summary
+* Scores for individual options
+* Reasoning for each option
+* Key considerations
+* Potential risks
 
-The calculation is performed deterministically by the server-side tool rather than being generated as arbitrary text by the model.
-
----
+The calculation is performed by server-side application logic rather than relying solely on free-form model-generated text.
 
 ## 🛠️ Technology Stack
 
-- **Next.js**
-- **React**
-- **TypeScript**
-- **Vercel AI SDK**
-- **Google Gemini**
-- **Zod**
-- **Tailwind CSS**
-- **React Markdown**
-
----
+* **Next.js**
+* **React**
+* **TypeScript**
+* **Vercel AI SDK**
+* **Google Gemini**
+* **Zod**
+* **Tailwind CSS**
+* **React Markdown**
+* **Vitest**
+* **React Testing Library**
+* **Playwright**
+* **GitHub Actions**
+* **Vercel**
 
 ## 📂 Important Files
 
 ### AI Configuration
 
-```text
-src/lib/ai/config.ts
-```
+`src/lib/ai/config.ts`
 
-Contains:
+Contains the Gemini model configuration and ThinkLens system prompt.
 
-- Gemini model configuration
-- ThinkLens system prompt
+### Server-Side Decision Analysis Tool
 
-### Server-Side Tool
+`src/lib/ai/tools/analyze-decision.ts`
 
-```text
-src/lib/ai/tools/analyze-decision.ts
-```
-
-Contains:
-
-- Zod input schema
-- Input validation
-- Decision analysis logic
-- Structured tool output
+Contains the Zod input schema, validation rules, decision-analysis logic, and structured tool output.
 
 ### Chat API
 
-```text
-src/app/api/chat/route.ts
-```
+`src/app/api/chat/route.ts`
 
-Responsible for:
-
-- Receiving chat messages
-- Converting UI messages to model messages
-- Calling the Gemini model
-- Providing the `analyzeDecision` tool
-- Streaming the response back to the frontend
-- Allowing a follow-up model step after the tool execution
-
-### Tool Result Component
-
-```text
-src/app/components/decision-analysis-result.tsx
-```
-
-Displays the structured decision analysis as a dedicated UI component.
+Responsible for receiving chat messages, calling the Gemini model, providing the decision-analysis tool, and streaming responses to the frontend.
 
 ### Chat Interface
 
-```text
-src/app/components/chat.tsx
-```
+`src/app/components/chat.tsx`
 
-Handles:
+Handles streaming assistant messages, tool-call lifecycle states, Markdown rendering, decision-analysis results, errors, and chat interactions.
 
-- Streaming assistant messages
-- Tool lifecycle states
-- Markdown rendering
-- Decision analysis result rendering
-- Tool execution errors
-- Auto-scroll behavior
-- Stop/thinking states
+### Decision Analysis Result Component
 
-### Navigation
+`src/app/components/decision-analysis-result.tsx`
 
-```text
-src/app/components/navbar.tsx
-```
+Displays the structured analysis as a readable React component rather than raw JSON.
 
-Includes a direct **Chat** navigation link so users can access the AI interface without manually entering `/chat`.
+### Decision Setup Form
 
----
+`src/app/components/decision-setup-form.tsx`
 
-## 🔄 Tool Calling Lifecycle
+Provides the decision setup form, validates required information, and displays a structured preview of the entered decision.
 
-The frontend handles the tool lifecycle using typed tool parts.
+### Testing Files
 
-### 1. Input Streaming
+* `src/app/components/chat.test.tsx` — chat component tests
+* `src/app/components/decision-analysis-result.test.tsx` — decision-analysis result rendering test
+* `src/app/components/decision-setup-form.test.tsx` — decision setup form validation and preview tests
+* `src/lib/ai/tools/analyze-decision.test.ts` — decision-analysis schema validation tests
+* `e2e/chat.spec.ts` — Playwright end-to-end test
 
-When the model begins preparing the tool input, the interface displays:
+### CI Workflow
 
-> Preparing decision analysis...
+`.github/workflows/ci.yml`
 
-This indicates that the tool input is still being streamed.
+Defines the GitHub Actions workflow that installs dependencies, runs the automated test suite, installs the Playwright browser, and runs the E2E tests.
 
----
+## 🔄 Tool-Calling Workflow
 
-### 2. Input Available
-
-Once the complete tool input is available, the interface displays:
-
-> Analyzing your decision...
-
-This indicates that the server-side tool is being executed.
-
----
-
-### 3. Output Available
-
-After successful execution, the tool result is rendered using the:
-
-```text
-DecisionAnalysisResult
-```
-
-React component.
-
-The result includes visual elements such as:
-
-- Decision summary
-- Option scores
-- Score indicators
-- Reasoning
-- Key considerations
-- Risks
-
-The tool result is therefore presented as a meaningful UI rather than a raw JSON object.
-
----
-
-### 4. Output Error
-
-If the tool execution fails, the interface displays a dedicated error state:
-
-> Decision analysis failed: ...
-
-The error is visually separated from normal assistant messages so users can understand that the tool operation failed.
-
----
-
-## 🔁 Multi-Step Tool Execution
-
-The chat API allows the model to perform a second step after the tool executes.
-
-The workflow is:
+The AI can request the server-side decision-analysis tool when appropriate.
 
 ```text
 User Message
      ↓
-Gemini
+Gemini Model
      ↓
 Tool Call
      ↓
 analyzeDecision
      ↓
-Structured Tool Result
+Validated Structured Result
      ↓
-Gemini reads result
+DecisionAnalysisResult Component
      ↓
-Final Assistant Response
+Assistant Follow-Up Response
 ```
 
-This allows ThinkLens to both display the structured analysis component and continue with a natural-language explanation based on the tool result.
+The chat interface represents tool execution through dedicated UI states instead of exposing raw tool data to the user.
 
----
+### Tool Lifecycle States
 
-## 🧪 Validation & Testing
+1. **Input streaming:** Displays a message while the model prepares the tool input.
+2. **Input available:** Indicates that decision analysis is being processed.
+3. **Output available:** Renders the structured result using `DecisionAnalysisResult`.
+4. **Output error:** Displays an error message if the tool execution fails.
 
-The implementation was tested locally and on the deployed Preview environment.
+The API also allows the model to continue its response after receiving the tool result.
 
-### Manual Tests
+## 🧪 Testing Strategy
 
-| Test | Result |
-|---|---|
-| Open Chat from navbar | ✅ Pass |
-| Send normal chat message | ✅ Pass |
-| Trigger decision analysis | ✅ Pass |
-| Tool input streaming state | ✅ Pass |
-| Tool input available state | ✅ Pass |
-| Tool result component | ✅ Pass |
-| Assistant continues after tool result | ✅ Pass |
-| Tool execution error state | ✅ Pass |
-| Mobile/responsive chat interface | ✅ Pass |
-| Production/Preview deployment | ✅ Pass |
+Testing focuses on component behavior, input validation, tool output, and the primary user workflow.
 
-### Code Validation
+### 1. Component Testing
 
-The project was also checked using:
+Vitest and React Testing Library are used to test React components.
+
+The tests cover chat rendering and interaction states, decision-analysis result rendering, and the decision setup form's validation and preview behavior.
+
+Tests use accessible queries where practical, such as roles and labels, to verify user-visible behavior.
+
+### 2. Decision-Analysis Validation Testing
+
+The decision-analysis tests verify the tool's input schema and validation rules, including invalid or incomplete structured data.
+
+### 3. API Mocking
+
+The Playwright E2E test intercepts the chat API request and returns a controlled response. This allows the primary chat workflow to be tested without making a real AI API request.
+
+### 4. End-to-End Testing
+
+The Playwright test exercises the primary chat flow through the browser.
+
+### 5. Continuous Integration
+
+The GitHub Actions workflow runs on pushes and pull requests. It installs dependencies, executes the Vitest suite, installs the Chromium browser, and runs Playwright tests.
+
+This helps detect regressions before changes are considered ready to merge.
+
+## ✅ Verification Results
+
+The following checks have passed locally:
+
+| Check                       | Result          |
+| --------------------------- | --------------- |
+| Vitest automated test suite | 25 tests passed |
+| ESLint                      | Passed          |
+| Production build            | Passed          |
+| Playwright E2E test         | Passed locally  |
+| Latest GitHub Actions run   | Green           |
+
+The latest GitHub Actions run was also checked on GitHub and showed a successful status for the recent commit.
+
+> **Note:** A passing workflow does not automatically mean branch protection is enabled. Required status checks must be configured separately if merges need to be blocked when CI fails.
+
+## ▶️ Running the Project Locally
+
+### Prerequisites
+
+* Node.js
+* npm
+* Git
+
+### Installation
+
+```bash
+git clone https://github.com/MindfullLearner/AI-frontend-Capstone.git
+cd AI-frontend-Capstone
+npm ci
+```
+
+Configure the required environment variables in a local `.env.local` file according to the project's AI configuration. Do not commit API keys or other secrets.
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:3000` in your browser.
+
+### Run Automated Tests
+
+Run the complete Vitest suite:
+
+```bash
+npm test
+```
+
+Run the lint check:
 
 ```bash
 npm run lint
 ```
 
+Check TypeScript:
+
 ```bash
 npx tsc --noEmit
 ```
+
+Build the production application:
 
 ```bash
 npm run build
 ```
 
-All three completed successfully.
+Run the Playwright E2E tests:
 
----
+```bash
+npx playwright test
+```
+
+If Playwright's required browser is not installed locally, install it first:
+
+```bash
+npx playwright install chromium
+```
 
 ## 🌐 Preview Deployment
 
-The completed feature was deployed using Vercel.
-
-**Preview URL:**
+The Generative UI and Tool Calling feature was deployed to Vercel and manually tested using the following preview URL:
 
 [Open ThinkLens Preview](https://ai-frontend-capstone-govoqmcaf-learner-eea1.vercel.app)
 
-The deployed version was manually tested by:
+The manual verification covered opening Chat, sending a decision-related prompt, triggering the analysis tool, checking its lifecycle states, viewing the result component, and checking the assistant's follow-up response.
 
-1. Opening the ThinkLens application.
-2. Navigating to Chat using the navbar.
-3. Sending a decision-related prompt.
-4. Triggering the `analyzeDecision` tool.
-5. Verifying the tool lifecycle UI.
-6. Verifying the Decision Analysis component.
-7. Verifying the final assistant response.
+## 💡 Key Design Decisions
 
----
+### Server-Side Decision Analysis
 
-## 💡 Design Decisions
+The AI determines when the analysis tool is useful, while server-side logic validates the input and performs deterministic calculations.
 
-### Why use a server-side tool?
+### Runtime Validation with Zod
 
-Decision scoring is deterministic and should not depend entirely on the language model.
+Zod provides runtime validation for structured tool input, helping prevent invalid data from being processed silently.
 
-The AI decides **when the analysis tool is useful**, while the tool performs the actual structured calculation.
+### Dedicated UI for Tool Results
 
-This creates a separation between:
+The `DecisionAnalysisResult` component transforms structured output into a readable interface instead of displaying raw JSON.
 
-```text
-AI reasoning → decides when to use the tool
-       ↓
-Server tool → validates and calculates
-       ↓
-React UI → presents the result
-```
+### Mocked API Responses in Tests
 
-### Why use Zod?
+Mocking the chat API makes automated tests more predictable and avoids depending on a live AI service for every test run.
 
-Zod provides runtime validation for the structured tool input.
+### Automated CI Checks
 
-This prevents invalid data such as:
-
-- Fewer than two options
-- Missing criteria
-- Invalid weights
-- Invalid scores
-- Duplicate criteria
-- Missing criterion scores
-
-from being silently processed.
-
-### Why render a component instead of JSON?
-
-Raw JSON is difficult for normal users to understand.
-
-The `DecisionAnalysisResult` component transforms the structured tool output into a readable decision-analysis interface.
-
-This demonstrates the main idea of **generative UI**: AI-generated tool interactions can result in meaningful application UI instead of only text.
-
----
+GitHub Actions runs the test suite and E2E workflow on pushes and pull requests, providing repeatable verification of changes.
 
 ## 📚 Key Learning Outcomes
 
-Through this assignment, I learned how to:
+Through this project, I practised:
 
-- Define AI tools using the Vercel AI SDK.
-- Create typed tool schemas with Zod.
-- Validate AI-generated structured input.
-- Execute tools on the server.
-- Handle streaming tool-call lifecycle states.
-- Render tool results as React components.
-- Handle tool execution failures in the UI.
-- Use multi-step AI tool execution.
-- Separate AI reasoning from deterministic application logic.
-- Test AI functionality through both local and deployed environments.
-- Connect an AI feature to the main application navigation.
-- Deploy and verify an AI-powered feature in a Preview environment.
-
----
+* Integrating AI tools into a React application.
+* Defining typed schemas with Zod.
+* Validating structured input and tool output.
+* Handling streaming and tool-call lifecycle states.
+* Rendering AI tool results as dedicated UI components.
+* Testing components with Vitest and React Testing Library.
+* Testing a browser workflow with Playwright.
+* Mocking API responses for reliable tests.
+* Running automated checks with GitHub Actions.
+* Verifying changes through linting, TypeScript checks, and production builds.
+* Deploying and manually verifying an AI-powered feature.
 
 ## 🚀 Future Improvements
 
-Possible future improvements include:
+* Add charts for comparing decision options.
+* Add more decision-analysis tools.
+* Allow users to edit and save analysis results.
+* Improve decision history and persistence.
+* Add additional E2E scenarios for error handling and form validation.
+* Configure required CI status checks before merging.
 
-- Add charts for option comparison.
-- Add more decision-analysis tools.
-- Allow users to edit tool-generated analysis.
-- Save tool results with individual decisions.
-- Add custom data streaming for richer UI feedback.
-- Add user confirmation for tools that perform external actions.
+## 👩‍💻 Project Information
 
----
+**Project:** ThinkLens — AI Decision & Reasoning Companion
+**Repository:** [MindfullLearner/AI-frontend-Capstone](https://github.com/MindfullLearner/AI-frontend-Capstone)
+**Internship:** FlyRank AI Frontend Engineering Internship
 
-## 👩‍💻 Project
+### Related Feature Work
 
-**ThinkLens — AI Decision & Reasoning Companion**
-
-Built as part of the **FlyRank AI Frontend AI Engineering Internship**.
-
-**Feature Branch:**
-
-```text
-feature/generative-ui-tools
-```
-
-**Main Feature:**
-
-```text
-Generative UI + Server-Side Tool Calling
-```
+* Generative UI and server-side tool calling
+* Automated testing and continuous integration
+* Decision setup form validation and preview
