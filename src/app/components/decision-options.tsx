@@ -34,6 +34,8 @@ type DecisionOptionsProps = {
   onChange: (id: string, value: string) => void;
   onAdd: () => void;
   onRemove: (id: string) => void;
+  optionsError?: string;
+  optionsErrorId?: string;
 };
 
 /**
@@ -52,12 +54,15 @@ export function DecisionOptions({
   onChange,
   onAdd,
   onRemove,
+  optionsError,
+  optionsErrorId,
 }: DecisionOptionsProps) {
   const canRemove = options.length > MIN_OPTIONS;
 
   return (
     <section
       aria-labelledby="options-heading"
+      aria-describedby={optionsError ? optionsErrorId : undefined}
       className="flex flex-col gap-5 rounded-lg border border-border bg-surface p-6"
     >
       <div className="flex flex-col gap-2">
@@ -71,6 +76,15 @@ export function DecisionOptions({
           List the alternatives you&apos;re weighing. A decision needs at
           least two options to compare.
         </p>
+        {optionsError ? (
+          <p
+            id={optionsErrorId}
+            role="alert"
+            className="text-sm text-red-600"
+          >
+            {optionsError}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-4">

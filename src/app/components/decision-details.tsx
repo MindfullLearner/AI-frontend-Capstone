@@ -9,6 +9,12 @@ type DecisionDetailsProps = {
   onContextChange: (value: string) => void;
   onDeadlineChange: (value: string) => void;
   onUrgencyChange: (value: string) => void;
+  titleError?: string;
+  titleErrorId?: string;
+  contextError?: string;
+  contextErrorId?: string;
+  deadlineError?: string;
+  deadlineErrorId?: string;
 };
 
 /**
@@ -28,6 +34,12 @@ export function DecisionDetails({
   onContextChange,
   onDeadlineChange,
   onUrgencyChange,
+  titleError,
+  titleErrorId,
+  contextError,
+  contextErrorId,
+  deadlineError,
+  deadlineErrorId,
 }: DecisionDetailsProps) {
   return (
     <section
@@ -55,8 +67,19 @@ export function DecisionDetails({
           value={title}
           onChange={(event) => onTitleChange(event.target.value)}
           placeholder="e.g. Choosing a new apartment"
+          aria-invalid={titleError ? true : undefined}
+          aria-describedby={titleError ? titleErrorId : undefined}
           className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
         />
+        {titleError ? (
+          <p
+            id={titleErrorId}
+            role="alert"
+            className="text-sm text-red-600"
+          >
+            {titleError}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -73,8 +96,19 @@ export function DecisionDetails({
           value={context}
           onChange={(event) => onContextChange(event.target.value)}
           placeholder="Describe the situation, why this decision matters, and any relevant background."
+          aria-invalid={contextError ? true : undefined}
+          aria-describedby={contextError ? contextErrorId : undefined}
           className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
         />
+        {contextError ? (
+          <p
+            id={contextErrorId}
+            role="alert"
+            className="text-sm text-red-600"
+          >
+            {contextError}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -90,8 +124,19 @@ export function DecisionDetails({
           type="date"
           value={deadline}
           onChange={(event) => onDeadlineChange(event.target.value)}
+          aria-invalid={deadlineError ? true : undefined}
+          aria-describedby={deadlineError ? deadlineErrorId : undefined}
           className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
         />
+        {deadlineError ? (
+          <p
+            id={deadlineErrorId}
+            role="alert"
+            className="text-sm text-red-600"
+          >
+            {deadlineError}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-2">
