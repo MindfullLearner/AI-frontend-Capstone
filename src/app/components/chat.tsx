@@ -123,6 +123,13 @@ export function Chat() {
 
   return (
     <div className="flex flex-col gap-4">
+      <p className="sr-only" role="status" aria-live="polite">
+        {isSubmitted
+          ? "ThinkLens is preparing a response."
+          : isStreaming
+            ? "ThinkLens is responding."
+            : ""}
+      </p>
       <div className="relative flex flex-col">
         <div
           ref={messageListRef}
