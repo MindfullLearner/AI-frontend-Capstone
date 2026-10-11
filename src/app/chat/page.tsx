@@ -1,5 +1,10 @@
 import { Chat } from "../components/chat";
+import type { Metadata } from "next";
 
+export const metadata: Metadata = {
+  title: "ThinkLens Chat",
+  description: "Chat with ThinkLens to explore decisions and reasoning.",
+};
 /**
  * /chat — ThinkLens Chat
  *
