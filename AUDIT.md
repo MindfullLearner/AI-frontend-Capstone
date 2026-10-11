@@ -70,3 +70,52 @@
 Both audited pages recorded zero WAVE errors and zero contrast errors. The Chat page initially had page-title and language errors, along with alerts about missing heading structure and page regions. After the page metadata and structure were addressed, the latest scan recorded zero errors.
 
 The remaining WAVE “Redundant link” alert is associated with the site navigation on the Chat page. Both the ThinkLens brand link and the Home navigation link point to `/`. They serve distinct navigation purposes, so both have been retained. This alert is documented as a reviewed finding rather than a WAVE error.
+
+## 4. Keyboard Accessibility Testing
+
+### Checks Performed
+
+| Test                                                 | Result |
+| ---------------------------------------------------- | ------ |
+| Send button receives keyboard focus                  | Pass   |
+| Send button has a visible focus indicator            | Pass   |
+| Stop button has a visible focus indicator            | Pass   |
+| Chat interaction can be initiated using the keyboard | Pass   |
+
+### Remaining Verification
+
+### Primary Flow Verification
+
+The primary chat flow was tested using keyboard navigation. The navigation links, chat input, Send button, and Stop button were checked. The Send and Stop buttons displayed visible focus indicators, and the keyboard was used to submit a prompt and stop a streaming response.
+
+**Result:** Pass — based on the checks performed.
+
+## 5. Performance Findings
+
+The latest recorded Lighthouse mobile run achieved a Performance score of 90 and an Accessibility score of 100.
+
+The report also identified the following opportunities for further optimization:
+
+* Unused JavaScript: estimated savings of 136.5 KiB.
+* Main-thread work: 2.3 seconds.
+* Long tasks: 11.
+* Render-blocking stylesheet: approximately 5.1 KiB.
+* Legacy JavaScript: estimated savings of 13.7 KiB.
+
+These findings are documented as opportunities for future optimization. The current recorded scores meet the target of 90 for both Performance and Accessibility.
+
+## 6. Audit Evidence
+
+Screenshots are stored in the `audit-screenshots/` directory.
+
+* `before_lighthouse_report.png` — previous Lighthouse mobile results.
+* `after_lighthouse_report.png` — latest Lighthouse mobile results.
+* `wave_home.png` — WAVE results for the Home page.
+* `wave_chat.png` — WAVE results for the Chat page.
+
+### Notes and Limitations
+
+Lighthouse scores and timings may vary between runs and testing conditions. The before-and-after figures represent recorded measurements and should not be interpreted as proof that every change independently caused the improvement.
+
+The WAVE scans recorded zero errors and zero contrast errors on both pages. The redundant-link alert was reviewed and documented. Keyboard testing was performed on the primary chat flow.
+
