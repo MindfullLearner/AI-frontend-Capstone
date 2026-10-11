@@ -1,5 +1,10 @@
 import { headers } from "next/headers";
+import type { Metadata } from "next";
 
+export const metadata: Metadata = {
+  title: "ThinkLens Health",
+  description: "Check the health status of ThinkLens.",
+};
 type HealthResponse = {
   status: string;
   service: string;

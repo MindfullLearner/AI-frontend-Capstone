@@ -1,4 +1,11 @@
 import { DecisionSetupForm } from "../../components/decision-setup-form";
+import type { Metadata } from "next";
+
+
+export const metadata: Metadata = {
+  title: "ThinkLens Decisions",
+  description: "Create and manage your decisions with ThinkLens.",
+};
 
 /**
  * /decisions/new — Create Decision (Decision Setup UI)

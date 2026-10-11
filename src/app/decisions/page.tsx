@@ -1,5 +1,10 @@
 import { PlaceholderPage } from "../components/placeholder-page";
+import type { Metadata } from "next";
 
+export const metadata: Metadata = {
+  title: "ThinkLens Decisions",
+  description: "Create and manage your decisions with ThinkLens.",
+};
 /**
  * /decisions — Decision Dashboard
  *

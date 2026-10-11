@@ -1,5 +1,10 @@
 import { PlaceholderPage } from "./components/placeholder-page";
+import type { Metadata } from "next";
 
+export const metadata: Metadata = {
+  title: "ThinkLens Home",
+  description: "Connect with ThinkLens to explore decisions and reasoning.",
+};
 /**
  * / — ThinkLens Home
  *
