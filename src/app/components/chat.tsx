@@ -263,7 +263,7 @@ export function Chat() {
                 ThinkLens
               </p>
               <p>
-                Something went wrong and the response failed.
+                 ThinkLens couldn&apos;t finish generating a response. The AI service may be temporarily unavailable, or the connection may have timed out. Please try again in a little while.
                 {error?.message ? ` (${error.message})` : null}
               </p>
               <button

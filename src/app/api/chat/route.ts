@@ -1,27 +1,108 @@
-import { streamText, convertToModelMessages, stepCountIs } from "ai";
+import {
+  streamText,
+  convertToModelMessages,
+  stepCountIs,
+  validateUIMessages,
+} from "ai";
 import { model, systemPrompt } from "@/lib/ai/config";
 import { analyzeDecision } from "@/lib/ai/tools/analyze-decision";
 
+export const maxDuration = 30;
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+    const MAX_BODY_BYTES = 1_000_000;
 
-  const modelMessages = await convertToModelMessages(messages);
+    const contentLength = req.headers.get("content-length");
 
-  const result = streamText({
-    model,
-    system: systemPrompt,
-    messages: modelMessages,
-    tools: { analyzeDecision },
-    // By default, streamText stops after a single step (isStepCount(1)),
-    // so a tool call would end the response with no chance for the model
-    // to see the tool's output and reply to it. Allowing 2 steps lets the
-    // model: 1) call analyzeDecision, then 2) read its result and produce
-    // a normal final assistant response based on it.
-    stopWhen: stepCountIs(2),
-    onError({ error }) {
-      console.error("Gemini streaming error:", error);
-    },
-  });
+    if (contentLength && Number(contentLength) > MAX_BODY_BYTES) {
+    return new Response("Request body too large.", { status: 413 });
+    }
 
-  return result.toUIMessageStreamResponse();
+    if (!req.body) {
+    return new Response("Request body is required.", { status: 400 });
+    }
+
+    const reader = req.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let totalBytes = 0;
+
+    try {
+    while (true) {
+    const { done, value } = await reader.read();
+
+    
+      if (done) break;
+
+      totalBytes += value.byteLength;
+
+      if (totalBytes > MAX_BODY_BYTES) {
+        await reader.cancel();
+        return new Response("Request body too large.", { status: 413 });
+      }
+
+      chunks.push(value);
+    }
+    
+
+    } catch {
+    return new Response("Unable to read request body.", { status: 400 });
+    }
+
+    const bodyBytes = new Uint8Array(totalBytes);
+    let offset = 0;
+
+    for (const chunk of chunks) {
+    bodyBytes.set(chunk, offset);
+    offset += chunk.byteLength;
+    }
+
+    let body: unknown;
+
+    try {
+    body = JSON.parse(new TextDecoder().decode(bodyBytes));
+    } catch {
+    return new Response("Invalid JSON.", { status: 400 });
+    }
+
+    if (
+    typeof body !== "object" ||
+    body === null ||
+    !("messages" in body) ||
+    !Array.isArray(body.messages)
+    ) {
+    return new Response("A messages array is required.", { status: 400 });
+    }
+
+    const { messages } = body as { messages: unknown[] };
+
+    if (messages.length === 0 || messages.length > 50) {
+      return new Response("Invalid number of messages.", { status: 400 });
+    }
+
+    let validatedMessages;
+
+    try {
+      validatedMessages = await validateUIMessages({
+        messages,
+      });
+    } catch {
+      return new Response("Invalid chat messages.", { status: 400 });
+    }
+
+    const modelMessages = await convertToModelMessages(validatedMessages);
+
+    const result = streamText({
+      model,
+      system: systemPrompt,
+      messages: modelMessages,
+      tools: { analyzeDecision },
+      maxRetries: 1,
+      stopWhen: stepCountIs(2),
+      onError({ error }) {
+        console.error("Gemini streaming error:", error);
+      },
+    });
+
+    return result.toUIMessageStreamResponse();
+
+
 }
