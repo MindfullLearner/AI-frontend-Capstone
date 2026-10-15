@@ -1,379 +1,123 @@
-# ThinkLens — Generative UI & Tool Calling
+# ThinkLens — AI Decision & Reasoning Companion
 
-## 📌 Assignment Overview
+ThinkLens is an AI-powered decision-support application designed to help users organize decisions, compare alternatives, examine assumptions, and reason through their options.
 
-This assignment adds a **generative UI and tool-calling workflow** to ThinkLens, an AI decision and reasoning companion.
+The project is being developed as part of the FlyRank AI Frontend Engineering Internship.
 
-The goal was to move beyond a basic streaming chatbot by allowing the AI to call a **server-side decision analysis tool**, process structured decision data, and display the tool's result as a dedicated UI component.
+## Features
 
-The implementation uses the **Vercel AI SDK**, Google Gemini, Zod schemas, and React components.
+- **Structured decision-making:** Organize a decision and its alternatives.
+- **AI-powered chat:** Interact with the AI assistant through a streaming chat interface.
+- **Decision analysis:** Present structured decision-analysis results when supported by the assistant.
+- **Responsive interface:** Use the application across different screen sizes.
+- **Error handling:** Display a user-friendly message when AI response generation fails.
 
----
+## Technology Stack
 
-## 🎯 Assignment Objectives
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- Vercel AI SDK
+- Google Gemini API
 
-This implementation covers the following requirements:
+## Getting Started
 
-- Add at least one server-side AI tool.
-- Define the tool using a typed Zod schema.
-- Execute the tool on the server.
-- Handle different tool-call lifecycle states.
-- Render tool states as dedicated UI instead of raw JSON.
-- Display the tool result using a real React component.
-- Handle failed tool execution with a designed error state.
-- Allow the AI to continue its response after receiving the tool result.
-- Deploy and test the complete workflow.
+### Prerequisites
 
----
+- Node.js version compatible with the project's `package.json`
+- npm
+- A Google Gemini API key
 
-## 🧠 Feature: Decision Analysis Tool
+### Installation
 
-ThinkLens includes a server-side `analyzeDecision` tool.
+Clone the repository:
 
-The AI can use this tool when a user's decision contains structured information such as:
-
-- Decision
-- Options
-- Criteria
-- Criterion weights
-- Scores for each option
-- Constraints and considerations
-
-The tool validates the input, calculates weighted scores, and returns structured analysis.
-
-### Tool Output
-
-The tool produces:
-
-- Overall decision summary
-- Score for each option
-- Reasoning for each option
-- Key considerations
-- Potential risks
-
-The calculation is performed deterministically by the server-side tool rather than being generated as arbitrary text by the model.
-
----
-
-## 🛠️ Technology Stack
-
-- **Next.js**
-- **React**
-- **TypeScript**
-- **Vercel AI SDK**
-- **Google Gemini**
-- **Zod**
-- **Tailwind CSS**
-- **React Markdown**
-
----
-
-## 📂 Important Files
-
-### AI Configuration
-
-```text
-src/lib/ai/config.ts
+```bash
+git clone https://github.com/MindfullLearner/AI-frontend-Capstone.git
+cd AI-frontend-Capstone
 ```
 
-Contains:
+Install dependencies:
 
-- Gemini model configuration
-- ThinkLens system prompt
-
-### Server-Side Tool
-
-```text
-src/lib/ai/tools/analyze-decision.ts
+```bash
+npm install
 ```
 
-Contains:
+Create a `.env.local` file in the project root and configure the environment variables required by the application.
 
-- Zod input schema
-- Input validation
-- Decision analysis logic
-- Structured tool output
+Do not commit `.env.local` or expose API keys in source code, screenshots, or public logs.
 
-### Chat API
+Start the development server:
 
-```text
-src/app/api/chat/route.ts
+```bash
+npm run dev
 ```
 
-Responsible for:
+Open `http://localhost:3000` in your browser.
 
-- Receiving chat messages
-- Converting UI messages to model messages
-- Calling the Gemini model
-- Providing the `analyzeDecision` tool
-- Streaming the response back to the frontend
-- Allowing a follow-up model step after the tool execution
+## Production Build
 
-### Tool Result Component
-
-```text
-src/app/components/decision-analysis-result.tsx
-```
-
-Displays the structured decision analysis as a dedicated UI component.
-
-### Chat Interface
-
-```text
-src/app/components/chat.tsx
-```
-
-Handles:
-
-- Streaming assistant messages
-- Tool lifecycle states
-- Markdown rendering
-- Decision analysis result rendering
-- Tool execution errors
-- Auto-scroll behavior
-- Stop/thinking states
-
-### Navigation
-
-```text
-src/app/components/navbar.tsx
-```
-
-Includes a direct **Chat** navigation link so users can access the AI interface without manually entering `/chat`.
-
----
-
-## 🔄 Tool Calling Lifecycle
-
-The frontend handles the tool lifecycle using typed tool parts.
-
-### 1. Input Streaming
-
-When the model begins preparing the tool input, the interface displays:
-
-> Preparing decision analysis...
-
-This indicates that the tool input is still being streamed.
-
----
-
-### 2. Input Available
-
-Once the complete tool input is available, the interface displays:
-
-> Analyzing your decision...
-
-This indicates that the server-side tool is being executed.
-
----
-
-### 3. Output Available
-
-After successful execution, the tool result is rendered using the:
-
-```text
-DecisionAnalysisResult
-```
-
-React component.
-
-The result includes visual elements such as:
-
-- Decision summary
-- Option scores
-- Score indicators
-- Reasoning
-- Key considerations
-- Risks
-
-The tool result is therefore presented as a meaningful UI rather than a raw JSON object.
-
----
-
-### 4. Output Error
-
-If the tool execution fails, the interface displays a dedicated error state:
-
-> Decision analysis failed: ...
-
-The error is visually separated from normal assistant messages so users can understand that the tool operation failed.
-
----
-
-## 🔁 Multi-Step Tool Execution
-
-The chat API allows the model to perform a second step after the tool executes.
-
-The workflow is:
-
-```text
-User Message
-     ↓
-Gemini
-     ↓
-Tool Call
-     ↓
-analyzeDecision
-     ↓
-Structured Tool Result
-     ↓
-Gemini reads result
-     ↓
-Final Assistant Response
-```
-
-This allows ThinkLens to both display the structured analysis component and continue with a natural-language explanation based on the tool result.
-
----
-
-## 🧪 Validation & Testing
-
-The implementation was tested locally and on the deployed Preview environment.
-
-### Manual Tests
-
-| Test | Result |
-|---|---|
-| Open Chat from navbar | ✅ Pass |
-| Send normal chat message | ✅ Pass |
-| Trigger decision analysis | ✅ Pass |
-| Tool input streaming state | ✅ Pass |
-| Tool input available state | ✅ Pass |
-| Tool result component | ✅ Pass |
-| Assistant continues after tool result | ✅ Pass |
-| Tool execution error state | ✅ Pass |
-| Mobile/responsive chat interface | ✅ Pass |
-| Production/Preview deployment | ✅ Pass |
-
-### Code Validation
-
-The project was also checked using:
+Run the following commands to check the project before deployment:
 
 ```bash
 npm run lint
-```
-
-```bash
-npx tsc --noEmit
-```
-
-```bash
 npm run build
+npm run start
 ```
 
-All three completed successfully.
+The `start` command runs the previously generated production build. Run `build` first.
 
----
+## Production Reliability and API Validation
 
-## 🌐 Preview Deployment
+The chat API route includes the following safeguards:
 
-The completed feature was deployed using Vercel.
+- A request-body size limit of 1 MB.
+- A message-count limit of 50.
+- Validation of incoming UI messages.
+- HTTP 400 responses for invalid JSON and invalid request structures.
+- A configured maximum route duration of 30 seconds.
+- Limited AI SDK retries and server-side logging of streaming errors.
 
-**Preview URL:**
+The chat interface displays a user-friendly error message and offers a retry action when generation fails.
 
-[Open ThinkLens Preview](https://ai-frontend-capstone-govoqmcaf-learner-eea1.vercel.app)
+**Current limitation:** These safeguards do not implement comprehensive rate limiting. They also do not eliminate temporary upstream AI service failures.
 
-The deployed version was manually tested by:
+## Testing and Verification
 
-1. Opening the ThinkLens application.
-2. Navigating to Chat using the navbar.
-3. Sending a decision-related prompt.
-4. Triggering the `analyzeDecision` tool.
-5. Verifying the tool lifecycle UI.
-6. Verifying the Decision Analysis component.
-7. Verifying the final assistant response.
+The following checks have passed during local development:
 
----
+| Check | Result |
+|---|---|
+| ESLint | Passed |
+| Production build | Passed |
+| Production server startup | Passed |
+| Homepage loading in production mode | Passed |
+| Main-page navigation | Passed |
+| Layout and styling | Passed |
+| AI chat response in local production mode | Passed |
+| Invalid JSON API request | Returned HTTP 400 |
+| Missing messages array | Returned HTTP 400 |
+| Empty messages array | Returned HTTP 400 |
 
-## 💡 Design Decisions
+Cross-browser testing and deployed-production verification remain to be completed.
 
-### Why use a server-side tool?
+## Architecture Overview
 
-Decision scoring is deterministic and should not depend entirely on the language model.
+- `src/app/` — Next.js application routes and pages.
+- `src/app/api/chat/route.ts` — Chat API endpoint, request validation, and AI streaming.
+- `src/app/components/chat.tsx` — Chat interface, response states, and error handling.
+- `src/app/layout.tsx` — Shared application layout.
+- `src/lib/ai/` — AI configuration and related functionality.
 
-The AI decides **when the analysis tool is useful**, while the tool performs the actual structured calculation.
+## AI Usage and Development Decisions
 
-This creates a separation between:
+AI assistance was used during implementation and debugging. Changes were reviewed and tested locally before being considered complete.
 
-```text
-AI reasoning → decides when to use the tool
-       ↓
-Server tool → validates and calculates
-       ↓
-React UI → presents the result
-```
+During production testing, the Gemini API returned a temporary HTTP 503 service-unavailable error. This demonstrated that upstream AI services may fail even when the application itself builds and runs successfully.
 
-### Why use Zod?
+The Google-hosted font import was removed after it caused a font compilation failure in the local build environment. The application now uses its existing CSS/system font fallbacks rather than depending on that remote font import.
 
-Zod provides runtime validation for the structured tool input.
+## License
 
-This prevents invalid data such as:
-
-- Fewer than two options
-- Missing criteria
-- Invalid weights
-- Invalid scores
-- Duplicate criteria
-- Missing criterion scores
-
-from being silently processed.
-
-### Why render a component instead of JSON?
-
-Raw JSON is difficult for normal users to understand.
-
-The `DecisionAnalysisResult` component transforms the structured tool output into a readable decision-analysis interface.
-
-This demonstrates the main idea of **generative UI**: AI-generated tool interactions can result in meaningful application UI instead of only text.
-
----
-
-## 📚 Key Learning Outcomes
-
-Through this assignment, I learned how to:
-
-- Define AI tools using the Vercel AI SDK.
-- Create typed tool schemas with Zod.
-- Validate AI-generated structured input.
-- Execute tools on the server.
-- Handle streaming tool-call lifecycle states.
-- Render tool results as React components.
-- Handle tool execution failures in the UI.
-- Use multi-step AI tool execution.
-- Separate AI reasoning from deterministic application logic.
-- Test AI functionality through both local and deployed environments.
-- Connect an AI feature to the main application navigation.
-- Deploy and verify an AI-powered feature in a Preview environment.
-
----
-
-## 🚀 Future Improvements
-
-Possible future improvements include:
-
-- Add charts for option comparison.
-- Add more decision-analysis tools.
-- Allow users to edit tool-generated analysis.
-- Save tool results with individual decisions.
-- Add custom data streaming for richer UI feedback.
-- Add user confirmation for tools that perform external actions.
-
----
-
-## 👩‍💻 Project
-
-**ThinkLens — AI Decision & Reasoning Companion**
-
-Built as part of the **FlyRank AI Frontend AI Engineering Internship**.
-
-**Feature Branch:**
-
-```text
-feature/generative-ui-tools
-```
-
-**Main Feature:**
-
-```text
-Generative UI + Server-Side Tool Calling
-```
+See the repository's `LICENSE` file for licensing terms.
