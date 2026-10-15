@@ -118,6 +118,16 @@ During production testing, the Gemini API returned a temporary HTTP 503 service-
 
 The Google-hosted font import was removed after it caused a font compilation failure in the local build environment. The application now uses its existing CSS/system font fallbacks rather than depending on that remote font import.
 
+## Screenshots
+
+Screenshots of:
+The ThinkLens homepage.
+![Home Page](screenshots/HomePage.png "Home Page")
+The chat interface with a successful response.
+![Chat Page](screenshots/SuccessfulChat.png "Succesfull Response")
+A responsive mobile layout.
+![Mobile View](screenshots/MobileView.png "Mobile Layout")
 ## License
 
 See the repository's `LICENSE` file for licensing terms.
+feature/production-polish
