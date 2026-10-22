@@ -200,8 +200,9 @@ describe("Chat", () => {
     render(<Chat />);
 
     expect(
-        screen.getByText(/Something went wrong and the response failed/i)
+        screen.getByText(/couldn't finish generating a response/i)
     ).toBeInTheDocument();
+
 
     expect(
         screen.getByText(/Request failed/i)

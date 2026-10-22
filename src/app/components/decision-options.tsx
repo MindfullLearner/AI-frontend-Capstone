@@ -7,7 +7,6 @@ export type Option = {
 
 export const MIN_OPTIONS = 2;
 
-let optionCounter = 0;
 
 /**
  * Generates a stable, browser-safe id for a new option without pulling in
@@ -17,15 +16,14 @@ let optionCounter = 0;
  * can use the same id-generation strategy when initializing state and
  * adding options, while the logic itself still lives here.
  */
-export function createOptionId(prefix: string) {
-  optionCounter += 1;
-  return `${prefix}-option-${optionCounter}`;
+export function createOptionId(prefix: string, index: number) {
+  return `${prefix}-option-${index}`;
 }
 
 export function createInitialOptions(prefix: string): Option[] {
   return [
-    { id: createOptionId(prefix), value: "" },
-    { id: createOptionId(prefix), value: "" },
+    { id: createOptionId(prefix, 1), value: "" },
+    { id: createOptionId(prefix, 2), value: "" },
   ];
 }
 

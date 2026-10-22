@@ -8,8 +8,6 @@ export type Criterion = {
 
 export const DEFAULT_IMPORTANCE = "medium";
 
-let criterionCounter = 0;
-
 /**
  * Generates a stable, browser-safe id for a new criterion without pulling
  * in a UUID dependency. Combines a render-scoped prefix (supplied by the
@@ -19,15 +17,14 @@ let criterionCounter = 0;
  * id-generation strategy when initializing state and adding criteria,
  * while the logic itself still lives here.
  */
-export function createCriterionId(prefix: string) {
-  criterionCounter += 1;
-  return `${prefix}-criterion-${criterionCounter}`;
+export function createCriterionId(prefix: string, index: number) {
+  return `${prefix}-criterion-${index}`;
 }
 
 export function createInitialCriteria(prefix: string): Criterion[] {
   return [
-    { id: createCriterionId(prefix), name: "", importance: DEFAULT_IMPORTANCE },
-    { id: createCriterionId(prefix), name: "", importance: DEFAULT_IMPORTANCE },
+    { id: createCriterionId(prefix, 1), name: "", importance: DEFAULT_IMPORTANCE },
+    { id: createCriterionId(prefix, 2), name: "", importance: DEFAULT_IMPORTANCE },
   ];
 }
 

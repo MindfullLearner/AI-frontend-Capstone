@@ -17,7 +17,7 @@ import {
 } from "./decision-criteria";
 import { DecisionContext } from "./decision-context";
 import { DecisionDetails } from "./decision-details";
-
+import { z } from "zod";
 const URGENCY_LABELS: Record<string, string> = {
   low: "Low — can wait",
   medium: "Medium — decide soon",
@@ -30,6 +30,13 @@ const IMPORTANCE_LABELS: Record<string, string> = {
   medium: "Medium",
   high: "High",
   critical: "Critical",
+};
+
+const IMPORTANCE_WEIGHTS: Record<string, number> = {
+  low: 1,
+  medium: 3,
+  high: 4,
+  critical: 5,
 };
 
 type FormErrors = {
@@ -50,6 +57,18 @@ type DecisionPreview = {
   stakeholders: string;
 };
 
+const decisionAnalysisSchema = z.object({
+  summary: z.string(),
+  options: z.array(
+    z.object({
+      name: z.string(),
+      score: z.number().min(0).max(100),
+      reasoning: z.string(),
+    }),
+  ),
+  keyConsiderations: z.array(z.string()),
+  risks: z.array(z.string()),
+});
 function hasNonWhitespaceText(value: string) {
   return value.trim().length > 0;
 }
@@ -134,10 +153,33 @@ function buildPreview(
   };
 }
 
+function buildScoreSuggestionPayload(preview: DecisionPreview) {
+  return {
+    decision: preview.title,
+    context: preview.context,
+    options: preview.options,
+    criteria: preview.criteria.map((criterion) => ({
+      name: criterion.name,
+      weight: IMPORTANCE_WEIGHTS[criterion.importance] ?? 3,
+    })),
+    constraints: preview.constraints,
+    stakeholders: preview.stakeholders,
+  };
+}
 /**
  * Client Component parent for the entire Decision Setup form. Owns decision
  * state, validates on Continue, and shows a structured preview when valid.
  */
+type DecisionAnalysis = {
+    summary: string;
+    options: {
+      name: string;
+      score: number;
+      reasoning: string;
+    }[];
+    keyConsiderations: string[];
+    risks: string[];
+  };
 export function DecisionSetupForm() {
   const idPrefix = useId();
 
@@ -165,6 +207,21 @@ export function DecisionSetupForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [preview, setPreview] = useState<DecisionPreview | null>(null);
 
+  const [isSuggestingScores, setIsSuggestingScores] = useState(false);
+  const [suggestionError, setSuggestionError] = useState<string | null>(null);
+  const [scoresReviewed, setScoresReviewed] = useState(false);
+  const [analysis, setAnalysis] = useState<DecisionAnalysis | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<
+  {
+    option: string;
+    criterion: string;
+    score: number;
+    reasoning: string;
+    uncertain: boolean;
+  }[]
+>([]);
   function handleOptionChange(id: string, value: string) {
     setOptions((current) =>
       current.map((option) =>
@@ -176,10 +233,18 @@ export function DecisionSetupForm() {
   function handleAddOption() {
     setOptions((current) => [
       ...current,
-      { id: createOptionId(idPrefix), value: "" },
+      {
+        id: createOptionId(
+          idPrefix,
+          Math.max(0, ...current.map((option) => {
+            const match = option.id.match(/-option-(\d+)$/);
+            return match ? Number(match[1]) : 0;
+          })) + 1
+        ),
+        value: "",
+      },
     ]);
   }
-
   function handleRemoveOption(id: string) {
     setOptions((current) =>
       current.length > MIN_OPTIONS
@@ -204,48 +269,209 @@ export function DecisionSetupForm() {
     );
   }
 
+
   function handleAddCriterion() {
-    setCriteria((current) => [
-      ...current,
-      {
-        id: createCriterionId(idPrefix),
-        name: "",
-        importance: DEFAULT_IMPORTANCE,
-      },
-    ]);
+    setCriteria((current) => {
+      const nextIndex =
+        Math.max(
+          0,
+          ...current.map((criterion) => {
+            const match = criterion.id.match(/-criterion-(\d+)$/);
+            return match ? Number(match[1]) : 0;
+          }),
+        ) + 1;
+
+      return [
+        ...current,
+        {
+          id: createCriterionId(idPrefix, nextIndex),
+          name: "",
+          importance: DEFAULT_IMPORTANCE,
+        },
+      ];
+    });
   }
 
+  function handleSuggestionScoreChange(
+    index: number,
+    score: number
+  ) {
+    setSuggestions((current) =>
+      current.map((suggestion, currentIndex) =>
+        currentIndex === index
+          ? { ...suggestion, score }
+          : suggestion
+      )
+    );
+  }
   function handleRemoveCriterion(id: string) {
     setCriteria((current) =>
       current.filter((criterion) => criterion.id !== id)
     );
   }
+  async function requestScoreSuggestions(nextPreview: DecisionPreview) {
+      setIsSuggestingScores(true);
+      setSuggestions([]);
+      setSuggestionError(null);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+      try {
+        const response = await fetch("/api/decisions/suggest-scores", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(buildScoreSuggestionPayload(nextPreview)),
+        });
+
+        const data: unknown = await response.json();
+
+        if (!response.ok) {
+          const message =
+            typeof data === "object" &&
+            data !== null &&
+            "error" in data &&
+            typeof data.error === "string"
+              ? data.error
+              : "Unable to suggest scores. Please try again.";
+
+          throw new Error(message);
+        }
+
+        if (
+          typeof data !== "object" ||
+          data === null ||
+          !("suggestions" in data) ||
+          !Array.isArray(data.suggestions)
+        ) {
+          throw new Error("The server returned an invalid score response.");
+        }
+
+        setSuggestions(data.suggestions);
+      } catch (error) {
+        setSuggestionError(
+          error instanceof Error
+            ? error.message
+            : "Something went wrong while suggesting scores."
+        );
+      } finally {
+        setIsSuggestingScores(false);
+      }
+  }
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const nextErrors = validateForm(title, context, deadline, options);
+    setAnalysis(null);
+    setAnalysisError(null);
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
       setPreview(null);
+      setSuggestions([]);
+      setScoresReviewed(false);
+      setSuggestionError(null);
       return;
     }
 
-    setPreview(
-      buildPreview(
-        title,
-        context,
-        deadline,
-        urgency,
-        options,
-        criteria,
-        constraints,
-        stakeholders
-      )
+    const nextPreview = buildPreview(
+      title,
+      context,
+      deadline,
+      urgency,
+      options,
+      criteria,
+      constraints,
+      stakeholders
     );
-  }
 
+    setPreview(nextPreview);
+    setSuggestions([]);
+    setSuggestionError(null);
+    setScoresReviewed(false);
+
+    await requestScoreSuggestions(nextPreview);
+ }
+
+  async function handleAnalyzeDecision() {
+      if (!preview || !scoresReviewed || isAnalyzing) {
+        return;
+      }
+
+      setIsAnalyzing(true);
+      setAnalysisError(null);
+      setAnalysis(null);
+
+      try {
+        const payload = {
+          decision: preview.title,
+          criteria: preview.criteria.map((criterion) => ({
+            name: criterion.name,
+            weight: IMPORTANCE_WEIGHTS[criterion.importance] ?? 3,
+          })),
+          options: preview.options.map((option) => ({
+            name: option,
+            scores: preview.criteria.map((criterion) => {
+              const suggestion = suggestions.find(
+                (item) =>
+                  item.option === option &&
+                  item.criterion === criterion.name
+              );
+
+              if (!suggestion) {
+                throw new Error(
+                  `Missing score for ${option} — ${criterion.name}.`
+                );
+              }
+
+              return {
+                criterion: criterion.name,
+                score: suggestion.score,
+              };
+            }),
+          })),
+        };
+
+        const response = await fetch("/api/decisions/analyze", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data: unknown = await response.json();
+
+        if (!response.ok) {
+          const message =
+            typeof data === "object" &&
+            data !== null &&
+            "error" in data &&
+            typeof data.error === "string"
+              ? data.error
+              : "Unable to analyze this decision. Please try again.";
+
+          throw new Error(message);
+        }
+
+        const validation = decisionAnalysisSchema.safeParse(data);
+
+        if (!validation.success) {
+          throw new Error(
+            "The analysis API returned an invalid response. Please try again."
+          );
+        }
+
+        setAnalysis(validation.data);
+      } catch (error) {
+        setAnalysisError(
+          error instanceof Error
+            ? error.message
+            : "Something went wrong while analyzing the decision."
+        );
+      } finally {
+        setIsAnalyzing(false);
+      }
+    }
   return (
     <>
       <form
@@ -295,10 +521,32 @@ export function DecisionSetupForm() {
         />
 
         <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted">
-            This form does not save or analyze your decision yet — that
-            arrives in a later milestone.
-          </p>
+          <div className="text-sm text-muted" aria-live="polite">
+            {isSuggestingScores ? (
+              <p>Generating AI score suggestions. Please wait...</p>
+            ) : suggestionError ? (
+              <div>
+                <p role="alert" className="text-red-600">
+                  {suggestionError}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (preview) {
+                      void requestScoreSuggestions(preview);
+                    }
+                  }}
+                  disabled={isSuggestingScores || !preview}
+                  className="mt-2 rounded-md border px-3 py-2 text-sm"
+                >
+                  {isSuggestingScores ? "Retrying..." : "Retry suggestions"}
+                </button>
+              </div>
+            ) : (
+              <p>AI-suggested scores will be provisional and can be reviewed.</p>
+            )}
+          </div>
 
           <div className="flex items-center gap-3">
             <button
@@ -309,7 +557,8 @@ export function DecisionSetupForm() {
             </button>
             <button
               type="submit"
-              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover"
+              disabled={isSuggestingScores}
+              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               Continue
             </button>
@@ -392,6 +641,158 @@ export function DecisionSetupForm() {
           </div>
         </section>
       ) : null}
+      {suggestions.length > 0 ? (
+      <section
+        aria-labelledby="score-suggestions-heading"
+        className="mt-10 flex flex-col gap-5 rounded-lg border border-border bg-surface p-6"
+      >
+        <h2
+          id="score-suggestions-heading"
+          className="text-lg font-semibold text-foreground"
+        >
+          AI Score Suggestions
+        </h2>
+
+        <label className="flex items-start gap-3 text-sm text-foreground">
+          <input
+            type="checkbox"
+            checked={scoresReviewed}
+            onChange={(event) => setScoresReviewed(event.target.checked)}
+            className="mt-1"
+          />
+          <span>
+            I have reviewed the suggested scores and understand that they may be
+            uncertain or based on incomplete information.
+          </span>
+        </label>
+
+        <div className="flex flex-col gap-4">
+          {suggestions.map((suggestion, index) => (
+            <article
+              key={`${suggestion.option}-${suggestion.criterion}-${index}`}
+              className="rounded-md border border-border p-4"
+            >
+              <h3 className="font-medium text-foreground">
+                {suggestion.option} — {suggestion.criterion}
+              </h3>
+
+              <div className="mt-3 flex flex-col gap-2">
+                <label
+                  htmlFor={`suggestion-score-${index}`}
+                  className="text-sm font-medium text-foreground"
+                >
+                  Score (0–10)
+                </label>
+
+                <input
+                  id={`suggestion-score-${index}`}
+                  type="number"
+                  min={0}
+                  max={10}
+                  step={1}
+                  value={suggestion.score}
+                  onChange={(event) => {
+                    const value = event.target.valueAsNumber;
+
+                    if (
+                      Number.isFinite(value) &&
+                      value >= 0 &&
+                      value <= 10
+                    ) {
+                      handleSuggestionScoreChange(index, value);
+                    }
+                  }}
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground sm:w-32"
+                />
+              </div>
+
+              <p className="mt-1 text-sm text-muted">
+                {suggestion.reasoning}
+              </p>
+
+              {suggestion.uncertain ? (
+                <p className="mt-2 text-sm font-medium text-amber-600">
+                  Uncertain — verify the available information.
+                </p>
+              ) : null}
+            </article>
+          ))}
+        </div>
+        <button
+          type="button"
+          disabled={!scoresReviewed || isSuggestingScores || isAnalyzing}
+          onClick={handleAnalyzeDecision}
+          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isAnalyzing ? "Analyzing..." : "Analyze Decision"}
+        </button>
+      </section>
+    ) : null}
+    {analysisError ? (
+      <p role="alert" className="mt-4 text-sm text-red-600">
+        {analysisError}
+      </p>
+    ) : null}
+    {analysis ? (
+      <section
+        aria-labelledby="analysis-results-heading"
+        aria-live="polite"
+        className="mt-10 flex flex-col gap-5 rounded-lg border border-border bg-surface p-6"
+      >
+        <h2
+          id="analysis-results-heading"
+          className="text-lg font-semibold text-foreground"
+        >
+          Decision Analysis Results
+        </h2>
+
+        <div>
+          <h3 className="font-medium text-foreground">Summary</h3>
+          <p className="mt-1 text-sm text-muted">{analysis.summary}</p>
+        </div>
+
+        <div>
+          <h3 className="font-medium text-foreground">Option Rankings</h3>
+          <ol className="mt-2 flex flex-col gap-3">
+            {[...analysis.options]
+              .sort((a, b) => b.score - a.score)
+              .map((option, index) => (
+                <li
+                  key={option.name}
+                  className="rounded-md border border-border p-4"
+                >
+                  <p className="font-medium text-foreground">
+                    {index + 1}. {option.name} — {option.score}/100
+                  </p>
+                  <p className="mt-1 text-sm text-muted">
+                    {option.reasoning}
+                  </p>
+                </li>
+              ))}
+          </ol>
+        </div>
+
+        <div>
+          <h3 className="font-medium text-foreground">
+            Key Considerations
+          </h3>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-foreground">
+            {analysis.keyConsiderations.map((item, index) => (
+              <li key={`${index}-${item}`}>{item}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <h3 className="font-medium text-foreground">Risks</h3>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-foreground">
+            {analysis.risks.map((risk, index) => (
+              <li key={`${index}-${risk}`}>{risk}</li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    ) : null}
     </>
   );
 }
