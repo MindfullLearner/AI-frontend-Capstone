@@ -1,33 +1,39 @@
 # ThinkLens — AI Decision & Reasoning Companion
 
-ThinkLens is an AI-powered decision-support application designed to help users organize decisions, compare alternatives, examine assumptions, and reason through their options.
+ThinkLens is an AI-powered decision-support application that helps users organize decisions, compare alternatives, examine assumptions, and reason through their options.
 
-The project is being developed as part of the FlyRank AI Frontend Engineering Internship.
+The project is being developed as part of the **FlyRank AI Frontend Engineering Internship**.
 
 ## Features
 
-- **Structured decision-making:** Organize a decision and its alternatives.
-- **AI-powered chat:** Interact with the AI assistant through a streaming chat interface.
-- **Decision analysis:** Present structured decision-analysis results when supported by the assistant.
+- **Structured decision-making:** Organize decisions, alternatives, criteria, and constraints.
+- **AI-powered streaming chat:** Interact with an AI assistant through a streaming chat interface.
+- **Decision analysis:** Generate structured decision-analysis results with weighted scoring and comparisons.
+- **AI score suggestions:** Request AI-generated scores and reasoning for decision alternatives, then review suggestions before using them.
+- **Input validation:** Validate API requests and decision-analysis data before processing.
+- **Rate limiting:** Protect the chat and score-suggestion endpoints against excessive requests using Upstash.
+- **Error handling:** Display user-friendly errors when AI generation or supporting services fail.
 - **Responsive interface:** Use the application across different screen sizes.
-- **Error handling:** Display a user-friendly message when AI response generation fails.
 
 ## Technology Stack
 
-- Next.js
-- React
-- TypeScript
-- Tailwind CSS
-- Vercel AI SDK
-- Google Gemini API
+- **Framework:** Next.js
+- **UI library:** React
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **AI integration:** Vercel AI SDK
+- **AI model provider:** Google Gemini
+- **Rate limiting:** Upstash Redis and Upstash Ratelimit
+- **Testing:** Vitest
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js version compatible with the project's `package.json`
+- Node.js compatible with the project configuration
 - npm
 - A Google Gemini API key
+- Upstash Redis REST credentials for testing the rate-limited API endpoints locally
 
 ### Installation
 
@@ -38,15 +44,27 @@ git clone https://github.com/MindfullLearner/AI-frontend-Capstone.git
 cd AI-frontend-Capstone
 ```
 
-Install dependencies:
+Install the dependencies:
 
 ```bash
 npm install
 ```
 
-Create a `.env.local` file in the project root and configure the environment variables required by the application.
+### Environment Variables
 
-Do not commit `.env.local` or expose API keys in source code, screenshots, or public logs.
+Create a `.env.local` file in the project root.
+
+Use `.env.example` as the reference for the required variable names, then add your own credentials:
+
+- Google Gemini API key
+- Upstash Redis REST URL
+- Upstash Redis REST token
+
+Use the exact variable names defined in `.env.example` and the application's configuration.
+
+**Security:** Never commit `.env.local`, expose API keys in source code, or publish credentials in screenshots, logs, or documentation. Configure the corresponding environment variables in Vercel for deployed environments.
+
+### Run Locally
 
 Start the development server:
 
@@ -54,80 +72,111 @@ Start the development server:
 npm run dev
 ```
 
-Open `http://localhost:3000` in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Production Build
+## Testing and Quality Checks
 
-Run the following commands to check the project before deployment:
+Run the automated test suite:
+
+```bash
+npx vitest run
+```
+
+Run the TypeScript check:
+
+```bash
+npx tsc --noEmit
+```
+
+Run the linter:
 
 ```bash
 npm run lint
+```
+
+Build the application for production:
+
+```bash
 npm run build
+```
+
+To run the production build locally, execute:
+
+```bash
 npm run start
 ```
 
-The `start` command runs the previously generated production build. Run `build` first.
+Run `npm run build` before `npm run start`.
 
-## Production Reliability and API Validation
+During the latest rate-limiting development work, the TypeScript check, linter, production build, and all **42 automated tests across 6 test files** passed locally.
 
-The chat API route includes the following safeguards:
+## API Reliability and Security
 
-- A request-body size limit of 1 MB.
-- A message-count limit of 50.
+### Chat API
+
+The chat endpoint includes:
+
+- A maximum request-body size of 1 MB.
+- A maximum of 50 messages per request.
 - Validation of incoming UI messages.
-- HTTP 400 responses for invalid JSON and invalid request structures.
+- HTTP 400 responses for malformed JSON and invalid request structures.
 - A configured maximum route duration of 30 seconds.
 - Limited AI SDK retries and server-side logging of streaming errors.
+- Rate limiting through the shared Upstash rate-limiting utility.
 
-The chat interface displays a user-friendly error message and offers a retry action when generation fails.
+### AI Score Suggestions
 
-**Current limitation:** These safeguards do not implement comprehensive rate limiting. They also do not eliminate temporary upstream AI service failures.
+The score-suggestion endpoint includes request validation, checks for invalid or inconsistent AI-generated suggestions, error handling, and Upstash rate limiting.
 
-## Testing and Verification
+### Rate-Limiting Behavior
 
-The following checks have passed during local development:
+The current shared rate limiter allows **up to 5 requests per minute per identified client IP**. Chat and score-suggestion requests use the same limiter, so requests to either endpoint count toward that shared limit.
 
-| Check | Result |
-|---|---|
-| ESLint | Passed |
-| Production build | Passed |
-| Production server startup | Passed |
-| Homepage loading in production mode | Passed |
-| Main-page navigation | Passed |
-| Layout and styling | Passed |
-| AI chat response in local production mode | Passed |
-| Invalid JSON API request | Returned HTTP 400 |
-| Missing messages array | Returned HTTP 400 |
-| Empty messages array | Returned HTTP 400 |
+Requests that exceed the limit receive HTTP 429 with a `Retry-After` header. Requests that cannot be protected because the client IP is unavailable or the rate-limiting service fails are rejected rather than processed without protection.
 
-Cross-browser testing and deployed-production verification remain to be completed.
+These safeguards reduce excessive requests but do not eliminate temporary failures from the upstream AI provider or other external services.
 
 ## Architecture Overview
 
-- `src/app/` — Next.js application routes and pages.
-- `src/app/api/chat/route.ts` — Chat API endpoint, request validation, and AI streaming.
-- `src/app/components/chat.tsx` — Chat interface, response states, and error handling.
-- `src/app/layout.tsx` — Shared application layout.
-- `src/lib/ai/` — AI configuration and related functionality.
+- `src/app/` — Next.js pages, layouts, and application routes.
+- `src/app/api/chat/route.ts` — Chat request validation, rate limiting, and AI streaming.
+- `src/app/api/decisions/analyze/route.ts` — Decision-analysis API endpoint.
+- `src/app/api/decisions/suggest-scores/route.ts` — AI score-suggestion endpoint.
+- `src/app/components/` — Application UI components.
+- `src/lib/ai/` — AI configuration, decision-analysis tools, and rate-limiting utilities.
 
 ## AI Usage and Development Decisions
 
-AI assistance was used during implementation and debugging. Changes were reviewed and tested locally before being considered complete.
+AI assistance was used during implementation, debugging, and code review. Changes were evaluated through manual checks, automated tests, and production builds.
 
-During production testing, the Gemini API returned a temporary HTTP 503 service-unavailable error. This demonstrated that upstream AI services may fail even when the application itself builds and runs successfully.
+During development, a temporary HTTP 503 response from the Gemini API demonstrated that upstream AI services can fail even when the application builds and runs successfully.
 
-The Google-hosted font import was removed after it caused a font compilation failure in the local build environment. The application now uses its existing CSS/system font fallbacks rather than depending on that remote font import.
+A remote Google-hosted font import was also removed after causing a font compilation failure in the local build environment. The application uses CSS/system font fallbacks instead.
 
 ## Screenshots
 
-Screenshots of:
-The ThinkLens homepage.
-![Home Page](screenshots/HomePage.png "Home Page")
-The chat interface with a successful response.
-![Chat Page](screenshots/SuccessfulChat.png "Succesfull Response")
-A responsive mobile layout.
-![Mobile View](screenshots/MobileView.png "Mobile Layout")
+Add screenshots to the repository's `screenshots/` directory using these filenames:
+
+### Homepage
+
+![ThinkLens homepage](screenshots/HomePage.png)
+
+### Successful Chat Response
+
+![ThinkLens chat interface](screenshots/SuccessfulChat.png)
+
+### Responsive Mobile Layout
+
+![ThinkLens mobile layout](screenshots/MobileView.png)
+
+*Ensure the screenshot files exist at these exact paths and that they do not expose API keys or other sensitive information.*
+
+## Deployment
+
+ThinkLens is deployed through Vercel. The production deployment uses the `feature/production-polish` branch.
+
+The deployed application requires its environment variables to be configured in Vercel. A successful build confirms that the application compiles, while production testing is needed to verify runtime behavior and external service connectivity.
+
 ## License
 
 See the repository's `LICENSE` file for licensing terms.
-feature/production-polish
