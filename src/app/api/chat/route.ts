@@ -6,9 +6,46 @@ import {
 } from "ai";
 import { model, systemPrompt } from "@/lib/ai/config";
 import { analyzeDecision } from "@/lib/ai/tools/analyze-decision";
+import { aiRateLimit } from "@/lib/ai/rate-limit";
+import { headers } from "next/headers";
 
 export const maxDuration = 30;
 export async function POST(req: Request) {
+      const requestHeaders = await headers();
+      const ip = requestHeaders.get("x-real-ip");
+
+      if (!ip) {
+        return Response.json(
+          { error: "Unable to identify the request source." },
+          { status: 503 }
+        );
+      }
+
+      try {
+        const { success, reset } = await aiRateLimit.limit(ip);
+
+        if (!success) {
+          const retryAfter = Math.max(
+            1,
+            Math.ceil((reset - Date.now()) / 1000)
+          );
+
+          return Response.json(
+            { error: "Too many requests. Please try again shortly." },
+            {
+              status: 429,
+              headers: { "Retry-After": String(retryAfter) },
+            }
+          );
+        }
+      } catch {
+        console.error("Chat rate-limiting service unavailable.");
+
+        return Response.json(
+          { error: "Request protection is temporarily unavailable." },
+          { status: 503 }
+        );
+      }
     const MAX_BODY_BYTES = 1_000_000;
 
     const contentLength = req.headers.get("content-length");
